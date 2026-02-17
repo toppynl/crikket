@@ -16,8 +16,8 @@ import {
   type BillingPlan,
   type BillingPlanLimitSnapshot,
   type BillingSubscriptionStatus,
-  billingDisabledEntitlements,
   type EntitlementSnapshot,
+  getBillingDisabledEntitlements,
   getBillingDisabledPlanLimitsSnapshot,
   getBillingPlanLimitsSnapshot,
   normalizeBillingPlan,
@@ -368,7 +368,7 @@ export async function getOrganizationEntitlements(
   organizationId: string
 ): Promise<EntitlementSnapshot> {
   if (!env.ENABLE_PAYMENTS) {
-    return billingDisabledEntitlements
+    return getBillingDisabledEntitlements()
   }
 
   const row = await db.query.organizationEntitlement.findFirst({

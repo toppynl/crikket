@@ -1,5 +1,3 @@
-import { env } from "@crikket/env/server"
-
 export const BILLING_PLAN = {
   free: "free",
   pro: "pro",
@@ -7,6 +5,13 @@ export const BILLING_PLAN = {
 } as const
 
 export type BillingPlan = (typeof BILLING_PLAN)[keyof typeof BILLING_PLAN]
+
+export type BillingPlanEntitlementConfig = {
+  canCreateBugReports: boolean
+  canUploadVideo: boolean
+  maxVideoDurationMs: number | null
+  memberCap: number | null
+}
 
 export const BILLING_SUBSCRIPTION_STATUS = {
   active: "active",
@@ -39,37 +44,63 @@ export type BillingPlanLimitSnapshot = EntitlementSnapshot & {
   monthlyPriceUsd: number
 }
 
-export const billingDisabledEntitlements: EntitlementSnapshot = {
-  plan: BILLING_PLAN.studio,
-  canCreateBugReports: true,
-  canUploadVideo: true,
-  maxVideoDurationMs: null,
-  memberCap: null,
-}
-
-export const billingPlanConfig: Record<BillingPlan, EntitlementSnapshot> = {
+export const billingPlanEntitlementsConfig: Record<
+  BillingPlan,
+  BillingPlanEntitlementConfig
+> = {
   free: {
-    plan: BILLING_PLAN.free,
     canCreateBugReports: false,
     canUploadVideo: false,
     maxVideoDurationMs: 0,
     memberCap: 1,
   },
   pro: {
-    plan: BILLING_PLAN.pro,
     canCreateBugReports: true,
     canUploadVideo: true,
-    maxVideoDurationMs: env.BILLING_VIDEO_MAX_DURATION_MS,
-    memberCap: env.BILLING_PRO_MEMBER_CAP,
+    maxVideoDurationMs: 900_000,
+    memberCap: 15,
   },
   studio: {
-    plan: BILLING_PLAN.studio,
     canCreateBugReports: true,
     canUploadVideo: true,
-    maxVideoDurationMs: env.BILLING_VIDEO_MAX_DURATION_MS,
+    maxVideoDurationMs: 900_000,
     memberCap: null,
   },
 }
+
+const BILLING_PLANS = [
+  BILLING_PLAN.free,
+  BILLING_PLAN.pro,
+  BILLING_PLAN.studio,
+] as const satisfies readonly BillingPlan[]
+
+const disabledEntitlementOverrides = {
+  canCreateBugReports: true,
+  canUploadVideo: true,
+  maxVideoDurationMs: null,
+  memberCap: null,
+} as const
+
+function createPlanEntitlements(plan: BillingPlan): EntitlementSnapshot {
+  return {
+    plan,
+    ...billingPlanEntitlementsConfig[plan],
+  }
+}
+
+export function getBillingDisabledEntitlements(
+  plan: BillingPlan = BILLING_PLAN.studio
+): EntitlementSnapshot {
+  return {
+    plan,
+    ...disabledEntitlementOverrides,
+  }
+}
+
+export const billingPlanConfig: Record<BillingPlan, EntitlementSnapshot> =
+  Object.fromEntries(
+    BILLING_PLANS.map((plan) => [plan, createPlanEntitlements(plan)])
+  ) as Record<BillingPlan, EntitlementSnapshot>
 
 export const billingPlanMonthlyPriceUsd: Record<BillingPlan, number> = {
   free: 0,
@@ -77,47 +108,41 @@ export const billingPlanMonthlyPriceUsd: Record<BillingPlan, number> = {
   studio: 49,
 }
 
+function createPlanLimitSnapshot(
+  entitlements: EntitlementSnapshot,
+  monthlyPriceUsd: number
+): BillingPlanLimitSnapshot {
+  return {
+    ...entitlements,
+    monthlyPriceUsd,
+  }
+}
+
 export function getBillingPlanLimitsSnapshot(): Record<
   BillingPlan,
   BillingPlanLimitSnapshot
 > {
-  return {
-    free: {
-      ...billingPlanConfig.free,
-      monthlyPriceUsd: billingPlanMonthlyPriceUsd.free,
-    },
-    pro: {
-      ...billingPlanConfig.pro,
-      monthlyPriceUsd: billingPlanMonthlyPriceUsd.pro,
-    },
-    studio: {
-      ...billingPlanConfig.studio,
-      monthlyPriceUsd: billingPlanMonthlyPriceUsd.studio,
-    },
-  }
+  return Object.fromEntries(
+    BILLING_PLANS.map((plan) => [
+      plan,
+      createPlanLimitSnapshot(
+        billingPlanConfig[plan],
+        billingPlanMonthlyPriceUsd[plan]
+      ),
+    ])
+  ) as Record<BillingPlan, BillingPlanLimitSnapshot>
 }
 
 export function getBillingDisabledPlanLimitsSnapshot(): Record<
   BillingPlan,
   BillingPlanLimitSnapshot
 > {
-  return {
-    free: {
-      ...billingDisabledEntitlements,
-      plan: BILLING_PLAN.free,
-      monthlyPriceUsd: 0,
-    },
-    pro: {
-      ...billingDisabledEntitlements,
-      plan: BILLING_PLAN.pro,
-      monthlyPriceUsd: 0,
-    },
-    studio: {
-      ...billingDisabledEntitlements,
-      plan: BILLING_PLAN.studio,
-      monthlyPriceUsd: 0,
-    },
-  }
+  return Object.fromEntries(
+    BILLING_PLANS.map((plan) => [
+      plan,
+      createPlanLimitSnapshot(getBillingDisabledEntitlements(plan), 0),
+    ])
+  ) as Record<BillingPlan, BillingPlanLimitSnapshot>
 }
 
 export function normalizeBillingPlan(value: unknown): BillingPlan {

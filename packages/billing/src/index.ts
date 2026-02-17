@@ -1,11 +1,14 @@
+export { polarClient } from "./lib/payments"
 export {
   ACTIVE_PAID_SUBSCRIPTION_STATUSES,
   BILLING_PLAN,
   BILLING_SUBSCRIPTION_STATUS,
   type BillingPlan,
+  type BillingPlanEntitlementConfig,
   type BillingPlanLimitSnapshot,
   type BillingSubscriptionStatus,
   billingPlanConfig,
+  billingPlanEntitlementsConfig,
   billingPlanMonthlyPriceUsd,
   type EntitlementSnapshot,
   getBillingPlanLimitsSnapshot,

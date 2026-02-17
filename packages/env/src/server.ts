@@ -12,12 +12,6 @@ export const env = createEnv({
     POLAR_WEBHOOK_SECRET: z.string().min(1).optional(),
     POLAR_PRO_PRODUCT_ID: z.string().min(1).optional(),
     POLAR_STUDIO_PRODUCT_ID: z.string().min(1).optional(),
-    BILLING_PRO_MEMBER_CAP: z.coerce.number().int().min(1).default(15),
-    BILLING_VIDEO_MAX_DURATION_MS: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .default(900_000),
     CORS_ORIGINS: z
       .string()
       .optional()

@@ -1,5 +1,6 @@
 import {
   assertOrganizationCanAddMembers,
+  polarClient,
   processPolarWebhookPayload,
 } from "@crikket/billing"
 import { db } from "@crikket/db"
@@ -17,7 +18,6 @@ import {
   sendEmailVerificationLinkEmail,
   sendOrganizationInvitationEmail,
 } from "./lib/email/auth-emails"
-import { polarClient } from "./lib/payments"
 
 const MINUTE = 60
 const HOUR = 60 * MINUTE
