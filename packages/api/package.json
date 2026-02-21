@@ -22,6 +22,8 @@
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "@types/pg": "catalog:",
+    "@upstash/ratelimit": "catalog:",
+    "@upstash/redis": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"

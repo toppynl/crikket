@@ -46,6 +46,8 @@ export const env = createEnv({
       .enum(["true", "false"])
       .default("false")
       .transform((v) => v === "true"),
+    UPSTASH_REDIS_REST_URL: z.url().optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     NODE_ENV: z
       .enum(["development", "production", "staging"])
       .default("development"),

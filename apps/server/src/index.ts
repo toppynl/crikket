@@ -1,4 +1,8 @@
 import { createContext } from "@crikket/api/context"
+import {
+  buildRpcRateLimitErrorResponse,
+  evaluateRpcRateLimit,
+} from "@crikket/api/rate-limit"
 import { appRouter } from "@crikket/api/routers/index"
 import { auth } from "@crikket/auth"
 import { env } from "@crikket/env/server"
@@ -15,6 +19,58 @@ import { logger } from "hono/logger"
 const app = new Hono()
 const allowedCorsOrigins = env.CORS_ORIGINS
 const fallbackCorsOrigin = allowedCorsOrigins[0] ?? env.BETTER_AUTH_URL
+type RateLimitHeaders = Record<string, string>
+
+function parseHeaderNumber(value: string | undefined): number | null {
+  if (!value) {
+    return null
+  }
+
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function selectStrictestRateLimitHeaders(
+  current: RateLimitHeaders,
+  incoming: RateLimitHeaders
+): RateLimitHeaders {
+  if (Object.keys(current).length === 0) {
+    return incoming
+  }
+
+  if (Object.keys(incoming).length === 0) {
+    return current
+  }
+
+  const currentLimit = parseHeaderNumber(current["x-ratelimit-limit"])
+  const incomingLimit = parseHeaderNumber(incoming["x-ratelimit-limit"])
+  const currentRemaining = parseHeaderNumber(current["x-ratelimit-remaining"])
+  const incomingRemaining = parseHeaderNumber(incoming["x-ratelimit-remaining"])
+
+  if (
+    currentLimit === null ||
+    incomingLimit === null ||
+    currentRemaining === null ||
+    incomingRemaining === null ||
+    currentLimit <= 0 ||
+    incomingLimit <= 0
+  ) {
+    return incoming
+  }
+
+  const currentRatio = currentRemaining / currentLimit
+  const incomingRatio = incomingRemaining / incomingLimit
+
+  if (incomingRatio < currentRatio) {
+    return incoming
+  }
+
+  if (incomingRatio === currentRatio && incomingRemaining < currentRemaining) {
+    return incoming
+  }
+
+  return current
+}
 
 app.use(logger())
 app.use(
@@ -56,7 +112,32 @@ export const rpcHandler = new RPCHandler(appRouter, {
 })
 
 app.use("/*", async (c, next) => {
+  const ipRateLimitDecision = await evaluateRpcRateLimit(c.req.raw, {
+    skipUser: true,
+  })
+  if (!ipRateLimitDecision.allowed) {
+    return buildRpcRateLimitErrorResponse(ipRateLimitDecision)
+  }
+  let rateLimitHeaders = ipRateLimitDecision.headers
+
   const context = await createContext({ context: c })
+  const userId = context.session?.user.id
+
+  if (userId) {
+    const userRateLimitDecision = await evaluateRpcRateLimit(c.req.raw, {
+      userId,
+      skipIp: true,
+    })
+
+    if (!userRateLimitDecision.allowed) {
+      return buildRpcRateLimitErrorResponse(userRateLimitDecision)
+    }
+
+    rateLimitHeaders = selectStrictestRateLimitHeaders(
+      rateLimitHeaders,
+      userRateLimitDecision.headers
+    )
+  }
 
   const rpcResult = await rpcHandler.handle(c.req.raw, {
     prefix: "/rpc",
@@ -64,7 +145,16 @@ app.use("/*", async (c, next) => {
   })
 
   if (rpcResult.matched) {
-    return c.newResponse(rpcResult.response.body, rpcResult.response)
+    const headers = new Headers(rpcResult.response.headers)
+    for (const [key, value] of Object.entries(rateLimitHeaders)) {
+      headers.set(key, value)
+    }
+
+    return new Response(rpcResult.response.body, {
+      status: rpcResult.response.status,
+      statusText: rpcResult.response.statusText,
+      headers,
+    })
   }
 
   const apiResult = await apiHandler.handle(c.req.raw, {
