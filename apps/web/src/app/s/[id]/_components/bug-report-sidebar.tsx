@@ -14,26 +14,31 @@ import type {
 
 export type SidebarTab = "details" | "console" | "network" | "actions"
 
+interface TimelineSidebarState {
+  entries: DebuggerTimelineEntry[]
+  selectedEntryId: string | null
+  highlightedEntryIds: string[]
+}
+
+interface NetworkSidebarState extends TimelineSidebarState {
+  requests: DebuggerNetworkRequest[]
+  isLoading: boolean
+  isFetchingNextPage: boolean
+  hasNextPage: boolean
+  onLoadMore: () => void
+}
+
 interface BugReportSidebarProps {
   bugReportId: string
   data: SharedBugReport
   activeTab: SidebarTab
   tabAction?: ReactNode
   onTabChange: (tab: SidebarTab) => void
-  actionEntries: DebuggerTimelineEntry[]
-  logEntries: DebuggerTimelineEntry[]
-  networkEntries: DebuggerTimelineEntry[]
-  networkRequests: DebuggerNetworkRequest[]
-  isNetworkRequestsLoading: boolean
-  isFetchingMoreNetworkRequests: boolean
-  hasMoreNetworkRequests: boolean
-  onLoadMoreNetworkRequests: () => void
-  selectedActionEntryId: string | null
-  selectedLogEntryId: string | null
-  selectedNetworkEntryId: string | null
-  highlightedActionEntryIds: string[]
-  highlightedLogEntryIds: string[]
-  highlightedNetworkEntryIds: string[]
+  timeline: {
+    actions: TimelineSidebarState
+    console: TimelineSidebarState
+  }
+  network: NetworkSidebarState
   onEntrySelect: (entry: DebuggerTimelineEntry) => void
 }
 
@@ -43,20 +48,8 @@ export function BugReportSidebar({
   activeTab,
   tabAction,
   onTabChange,
-  actionEntries,
-  logEntries,
-  networkEntries,
-  networkRequests,
-  isNetworkRequestsLoading,
-  isFetchingMoreNetworkRequests,
-  hasMoreNetworkRequests,
-  onLoadMoreNetworkRequests,
-  selectedActionEntryId,
-  selectedLogEntryId,
-  selectedNetworkEntryId,
-  highlightedActionEntryIds,
-  highlightedLogEntryIds,
-  highlightedNetworkEntryIds,
+  timeline,
+  network,
   onEntrySelect,
 }: BugReportSidebarProps) {
   const deviceInfo = data.deviceInfo as DeviceInfo | null
@@ -139,37 +132,37 @@ export function BugReportSidebar({
         {activeTab === "actions" && (
           <TimelineList
             emptyMessage="No user actions captured."
-            entries={actionEntries}
-            highlightedIds={highlightedActionEntryIds}
+            entries={timeline.actions.entries}
+            highlightedIds={timeline.actions.highlightedEntryIds}
             icon={<MousePointerClick className="h-3 w-3" />}
             onSelect={onEntrySelect}
-            selectedId={selectedActionEntryId}
+            selectedId={timeline.actions.selectedEntryId}
           />
         )}
 
         {activeTab === "console" && (
           <TimelineList
             emptyMessage="No console logs captured."
-            entries={logEntries}
-            highlightedIds={highlightedLogEntryIds}
+            entries={timeline.console.entries}
+            highlightedIds={timeline.console.highlightedEntryIds}
             icon={<Terminal className="h-3 w-3" />}
             onSelect={onEntrySelect}
-            selectedId={selectedLogEntryId}
+            selectedId={timeline.console.selectedEntryId}
           />
         )}
 
         {activeTab === "network" && (
           <NetworkRequestsPanel
             bugReportId={bugReportId}
-            entries={networkEntries}
-            hasNextPage={hasMoreNetworkRequests}
-            highlightedEntryIds={highlightedNetworkEntryIds}
-            isFetchingNextPage={isFetchingMoreNetworkRequests}
-            isLoading={isNetworkRequestsLoading}
+            entries={network.entries}
+            hasNextPage={network.hasNextPage}
+            highlightedEntryIds={network.highlightedEntryIds}
+            isFetchingNextPage={network.isFetchingNextPage}
+            isLoading={network.isLoading}
             onEntrySelect={onEntrySelect}
-            onLoadMore={onLoadMoreNetworkRequests}
-            requests={networkRequests}
-            selectedEntryId={selectedNetworkEntryId}
+            onLoadMore={network.onLoadMore}
+            requests={network.requests}
+            selectedEntryId={network.selectedEntryId}
           />
         )}
       </div>
@@ -222,7 +215,7 @@ function DetailRow({
       <span className="font-medium text-muted-foreground text-xs">{label}</span>
       <span
         className={cn(
-          "break-words text-foreground text-sm",
+          "wrap-break-word text-foreground text-sm",
           truncate && "truncate",
           className
         )}

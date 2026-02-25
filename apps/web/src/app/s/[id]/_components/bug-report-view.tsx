@@ -304,6 +304,36 @@ export function BugReportView({ id }: BugReportViewProps) {
     )
   }
 
+  const sidebarProps = {
+    bugReportId: data.id,
+    data,
+    activeTab,
+    onTabChange: handleTabChange,
+    timeline: {
+      actions: {
+        entries: actionEntries,
+        selectedEntryId: selectedEntryIds.action,
+        highlightedEntryIds: highlightedActionEntryIds,
+      },
+      console: {
+        entries: logEntries,
+        selectedEntryId: selectedEntryIds.log,
+        highlightedEntryIds: highlightedLogEntryIds,
+      },
+    },
+    network: {
+      entries: networkEntries,
+      requests: networkRequests,
+      isLoading: networkRequestsQuery.isLoading,
+      isFetchingNextPage: networkRequestsQuery.isFetchingNextPage,
+      hasNextPage: Boolean(networkRequestsQuery.hasNextPage),
+      onLoadMore: handleLoadMoreNetworkRequests,
+      selectedEntryId: selectedEntryIds.network,
+      highlightedEntryIds: highlightedNetworkEntryIds,
+    },
+    onEntrySelect: handleEntrySelect,
+  } as const
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
       <BugReportHeader
@@ -362,31 +392,7 @@ export function BugReportView({ id }: BugReportViewProps) {
               maxSize={SIDEBAR_MAX_WIDTH}
               minSize={SIDEBAR_MIN_WIDTH}
             >
-              <BugReportSidebar
-                actionEntries={actionEntries}
-                activeTab={activeTab}
-                bugReportId={data.id}
-                data={data}
-                hasMoreNetworkRequests={Boolean(
-                  networkRequestsQuery.hasNextPage
-                )}
-                highlightedActionEntryIds={highlightedActionEntryIds}
-                highlightedLogEntryIds={highlightedLogEntryIds}
-                highlightedNetworkEntryIds={highlightedNetworkEntryIds}
-                isFetchingMoreNetworkRequests={
-                  networkRequestsQuery.isFetchingNextPage
-                }
-                isNetworkRequestsLoading={networkRequestsQuery.isLoading}
-                logEntries={logEntries}
-                networkEntries={networkEntries}
-                networkRequests={networkRequests}
-                onEntrySelect={handleEntrySelect}
-                onLoadMoreNetworkRequests={handleLoadMoreNetworkRequests}
-                onTabChange={handleTabChange}
-                selectedActionEntryId={selectedEntryIds.action}
-                selectedLogEntryId={selectedEntryIds.log}
-                selectedNetworkEntryId={selectedEntryIds.network}
-              />
+              <BugReportSidebar {...sidebarProps} />
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>
@@ -405,27 +411,7 @@ export function BugReportView({ id }: BugReportViewProps) {
           )}
           <div className="min-h-0 flex-1">
             <BugReportSidebar
-              actionEntries={actionEntries}
-              activeTab={activeTab}
-              bugReportId={data.id}
-              data={data}
-              hasMoreNetworkRequests={Boolean(networkRequestsQuery.hasNextPage)}
-              highlightedActionEntryIds={highlightedActionEntryIds}
-              highlightedLogEntryIds={highlightedLogEntryIds}
-              highlightedNetworkEntryIds={highlightedNetworkEntryIds}
-              isFetchingMoreNetworkRequests={
-                networkRequestsQuery.isFetchingNextPage
-              }
-              isNetworkRequestsLoading={networkRequestsQuery.isLoading}
-              logEntries={logEntries}
-              networkEntries={networkEntries}
-              networkRequests={networkRequests}
-              onEntrySelect={handleEntrySelect}
-              onLoadMoreNetworkRequests={handleLoadMoreNetworkRequests}
-              onTabChange={handleTabChange}
-              selectedActionEntryId={selectedEntryIds.action}
-              selectedLogEntryId={selectedEntryIds.log}
-              selectedNetworkEntryId={selectedEntryIds.network}
+              {...sidebarProps}
               tabAction={
                 <button
                   aria-label={isMobileVideoHidden ? "Show video" : "Hide video"}
