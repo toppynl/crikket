@@ -76,6 +76,8 @@ export const sdkTestState = {
   recordingStopCalls: 0,
   recordingAbortCalls: 0,
   submitRequests: [] as CaptureSubmitRequest[],
+  screenshotError: null as Error | null,
+  startRecordingError: null as Error | null,
   objectUrlsCreated: [] as string[],
   objectUrlsRevoked: [] as string[],
   reviewSnapshot: buildReviewSnapshot(),
@@ -145,8 +147,18 @@ mock.module(MOUNT_CAPTURE_UI_PATH, () => ({
 }))
 
 mock.module(CAPTURE_MEDIA_PATH, () => ({
-  captureScreenshot: async () => sdkTestState.screenshotBlob,
+  captureScreenshot: () => {
+    if (sdkTestState.screenshotError) {
+      return Promise.reject(sdkTestState.screenshotError)
+    }
+
+    return Promise.resolve(sdkTestState.screenshotBlob)
+  },
   startDisplayRecording: () => {
+    if (sdkTestState.startRecordingError) {
+      return Promise.reject(sdkTestState.startRecordingError)
+    }
+
     const finished = new Promise<RecordingResult>((resolve) => {
       resolveRecordingFinished = resolve
     })
@@ -266,6 +278,8 @@ export function resetSdkTestState(): void {
   sdkTestState.recordingStopCalls = 0
   sdkTestState.recordingAbortCalls = 0
   sdkTestState.submitRequests = []
+  sdkTestState.screenshotError = null
+  sdkTestState.startRecordingError = null
   sdkTestState.objectUrlsCreated = []
   sdkTestState.objectUrlsRevoked = []
   sdkTestState.reviewSnapshot = buildReviewSnapshot()
