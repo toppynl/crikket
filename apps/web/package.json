@@ -11,6 +11,7 @@
     "@base-ui/react": "catalog:",
     "@crikket/api": "workspace:*",
     "@crikket/auth": "workspace:*",
+    "@crikket/capture": "workspace:*",
     "@crikket/env": "workspace:*",
     "@crikket/ui": "workspace:*",
     "@crikket/shared": "workspace:*",

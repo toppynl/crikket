@@ -13,9 +13,10 @@ ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
 COPY package.json bun.lock turbo.json tsconfig.json biome.jsonc ./
 COPY apps ./apps
 COPY packages ./packages
+COPY sdks ./sdks
 
 RUN bun install --frozen-lockfile
-RUN bun run --filter web build
+RUN bun run build -- --filter=web
 
 EXPOSE 3001
 

@@ -1,5 +1,5 @@
 import { reportNonFatalError } from "@crikket/shared/lib/errors"
-import { registerDebuggerBackgroundListeners } from "@/lib/bug-report-debugger"
+import { registerDebuggerBackgroundListeners } from "@/lib/bug-report-debugger/engine/background"
 import { handleRecorderHotkeyCommand } from "@/lib/recorder-hotkey-commands"
 
 export default defineBackground(() => {

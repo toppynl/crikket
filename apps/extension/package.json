@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@crikket/api": "workspace:*",
+    "@crikket/capture-core": "workspace:*",
     "@crikket/env": "workspace:*",
     "@crikket/shared": "workspace:*",
     "@crikket/ui": "workspace:*",

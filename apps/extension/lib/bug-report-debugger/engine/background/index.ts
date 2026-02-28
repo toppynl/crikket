@@ -1,4 +1,3 @@
-import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import {
   BACKGROUND_LISTENER_FLAG,
   DISCARD_SESSION_MESSAGE,
@@ -8,9 +7,10 @@ import {
   PAGE_EVENT_MESSAGE,
   PAGE_EVENTS_MESSAGE,
   START_SESSION_MESSAGE,
-} from "../../constants"
+} from "@crikket/capture-core/debugger/constants"
+import type { DebuggerRuntimeResponse } from "@crikket/capture-core/debugger/types"
+import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import { isDebuggerRuntimeMessage } from "../../messaging"
-import type { DebuggerRuntimeResponse } from "../../types"
 import { createDebuggerSessionStore } from "./session-store"
 
 export function registerDebuggerBackgroundListeners(): void {

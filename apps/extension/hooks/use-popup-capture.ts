@@ -1,10 +1,10 @@
+import { appendDebuggerSessionIdToUrl } from "@crikket/capture-core/debugger/recorder-session"
 import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import { useState } from "react"
 import {
-  appendDebuggerSessionIdToUrl,
   discardDebuggerSession,
   startDebuggerSession,
-} from "@/lib/bug-report-debugger"
+} from "@/lib/bug-report-debugger/client"
 import {
   CAPTURE_CONTEXT_STORAGE_KEY,
   CAPTURE_TAB_ID_STORAGE_KEY,

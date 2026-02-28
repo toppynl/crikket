@@ -1,5 +1,5 @@
+import type { BugReportDebuggerPayload } from "@crikket/capture-core/debugger/types"
 import { ORPCError } from "@orpc/client"
-import type { BugReportDebuggerPayload } from "@/lib/bug-report-debugger"
 
 const MAX_PAGE_TITLE_LENGTH = 300
 

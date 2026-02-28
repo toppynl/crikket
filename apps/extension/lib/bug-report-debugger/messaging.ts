@@ -1,4 +1,3 @@
-import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import {
   DISCARD_SESSION_MESSAGE,
   ENSURE_PAGE_RUNTIME_MESSAGE,
@@ -8,13 +7,14 @@ import {
   PAGE_EVENT_MESSAGE,
   PAGE_EVENTS_MESSAGE,
   START_SESSION_MESSAGE,
-} from "./constants"
-import { isRecordLike } from "./normalize"
+} from "@crikket/capture-core/debugger/constants"
+import { isRecordLike } from "@crikket/capture-core/debugger/normalize"
 import type {
   DebuggerContentBridgePayload,
   DebuggerRuntimeMessage,
   DebuggerRuntimeResponse,
-} from "./types"
+} from "@crikket/capture-core/debugger/types"
+import { reportNonFatalError } from "@crikket/shared/lib/errors"
 
 export function sendDebuggerMessage<TData>(
   message: DebuggerRuntimeMessage

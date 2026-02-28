@@ -1,21 +1,24 @@
-import { reportNonFatalError } from "@crikket/shared/lib/errors"
-import { DEBUGGER_SESSIONS_STORAGE_KEY } from "../../constants"
-import { normalizeDebuggerEvent, normalizeStoredSession } from "../../normalize"
+import { DEBUGGER_SESSIONS_STORAGE_KEY } from "@crikket/capture-core/debugger/constants"
+import {
+  appendActionEventWithDedup,
+  appendEventWithRetentionPolicy,
+  appendNetworkEventWithDedup,
+} from "@crikket/capture-core/debugger/engine/background/retention"
+import {
+  normalizeDebuggerEvent,
+  normalizeStoredSession,
+} from "@crikket/capture-core/debugger/normalize"
 import type {
   DebuggerEvent,
   DebuggerSessionSnapshot,
   StoredDebuggerSession,
-} from "../../types"
+} from "@crikket/capture-core/debugger/types"
+import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import {
   createSessionId,
   injectDebuggerScriptIntoTab,
   isInjectablePageUrl,
 } from "./injection"
-import {
-  appendActionEventWithDedup,
-  appendEventWithRetentionPolicy,
-  appendNetworkEventWithDedup,
-} from "./retention"
 
 interface StartSessionPayload {
   captureTabId: number

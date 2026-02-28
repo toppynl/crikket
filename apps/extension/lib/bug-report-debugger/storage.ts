@@ -1,4 +1,4 @@
-import { DEBUGGER_SESSION_ID_STORAGE_KEY } from "./constants"
+import { DEBUGGER_SESSION_ID_STORAGE_KEY } from "@crikket/capture-core/debugger/constants"
 
 export async function readStoredDebuggerSessionId(): Promise<string | null> {
   const result = await chrome.storage.local.get([

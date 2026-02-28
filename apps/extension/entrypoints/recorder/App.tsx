@@ -1,3 +1,9 @@
+import {
+  buildDebuggerSubmissionPayload,
+  hasDebuggerPayloadData,
+} from "@crikket/capture-core/debugger/payload"
+import { readDebuggerSessionIdFromSearch } from "@crikket/capture-core/debugger/recorder-session"
+import type { BugReportDebuggerPayload } from "@crikket/capture-core/debugger/types"
 import { env } from "@crikket/env/extension"
 import type { Priority } from "@crikket/shared/constants/priorities"
 import { reportNonFatalError } from "@crikket/shared/lib/errors"
@@ -20,14 +26,10 @@ import { useRecorderRecordingSync } from "@/hooks/use-recorder-recording-sync"
 import { useScreenCapture } from "@/hooks/use-screen-capture"
 import { useTimer } from "@/hooks/use-timer"
 import {
-  type BugReportDebuggerPayload,
-  buildDebuggerSubmissionPayload,
   discardDebuggerSession,
   getDebuggerSessionSnapshot,
-  hasDebuggerPayloadData,
   markDebuggerRecordingStarted,
-  readDebuggerSessionIdFromSearch,
-} from "@/lib/bug-report-debugger"
+} from "@/lib/bug-report-debugger/client"
 import { client } from "@/lib/orpc"
 import {
   buildCaptureContextSubmissionData,

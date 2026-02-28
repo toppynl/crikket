@@ -3,9 +3,12 @@ import {
   GET_SESSION_SNAPSHOT_MESSAGE,
   MARK_RECORDING_STARTED_MESSAGE,
   START_SESSION_MESSAGE,
-} from "./constants"
+} from "@crikket/capture-core/debugger/constants"
+import type {
+  DebuggerCaptureType,
+  DebuggerSessionSnapshot,
+} from "@crikket/capture-core/debugger/types"
 import { sendDebuggerMessage } from "./messaging"
-import type { DebuggerCaptureType, DebuggerSessionSnapshot } from "./types"
 
 export function startDebuggerSession(input: {
   captureTabId: number
