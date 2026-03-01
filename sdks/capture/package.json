@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "build": "bun run ./scripts/build.ts",
+    "dev": "bun run ./scripts/build.ts --watch",
     "check-types": "tsc --noEmit -p tsconfig.json",
     "test": "bun test test"
   },
