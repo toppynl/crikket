@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Embeddable browser capture SDK for collecting bug reports from websites.",
   "license": "AGPL-3.0-only",
-  "homepage": "https://crikket.io/docs/capture-sdk",
+  "homepage": "https://crikket.io/docs",
   "bugs": {
     "url": "https://github.com/redpangilinan/crikket/issues"
   },

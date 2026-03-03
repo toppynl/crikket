@@ -125,13 +125,18 @@ docker compose -f docker-compose.external-db.yml -f docker-compose.caddy.yml up 
 
   <Step>
 
-### Validate Deployment
+  ### Validate Deployment
 
-```bash
-docker compose ps
-docker compose logs -f server
-docker compose logs -f web
-```
+  ```bash
+  ./scripts/healthcheck.sh
+  ```
+
+  If you need live logs while debugging:
+
+  ```bash
+  docker compose logs -f server
+  docker compose logs -f web
+  ```
 
   </Step>
 </Steps>
