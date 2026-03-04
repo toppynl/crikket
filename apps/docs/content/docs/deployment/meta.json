@@ -1,5 +1,5 @@
 {
   "title": "Deployment",
   "defaultOpen": true,
-  "pages": ["caddy"]
+  "pages": ["caddy", "vercel"]
 }

@@ -1,0 +1,237 @@
+---
+title: Vercel
+description: End-to-end deployment of both the Crikket web app and Hono server on Vercel.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+Use this guide when you want a full Vercel deployment:
+
+- `apps/web` on Vercel
+- `apps/server` on Vercel
+
+This guide assumes:
+
+- web app: `https://app.example.com`
+- server/API: `https://api.example.com`
+
+## Required Domain Model
+
+The web app and server must use sibling subdomains under the same parent domain.
+
+Use:
+
+- `app.example.com` for `apps/web`
+- `api.example.com` for `apps/server`
+- `BETTER_AUTH_COOKIE_DOMAIN=example.com`
+
+## What This Deployment Uses
+
+- two Vercel projects from the same monorepo
+- `apps/server` as a Hono app
+- `apps/web` as a Next.js app
+- a managed PostgreSQL database
+- S3-compatible object storage
+- custom production domains on both Vercel projects
+
+For monorepos, Vercel supports creating one project per app and setting each project's Root Directory.
+
+## Before You Start
+
+- A Vercel account
+- One shared parent domain, such as `example.com`
+- A PostgreSQL database
+- S3-compatible object storage credentials
+
+Required services:
+
+- database for `DATABASE_URL`
+- object storage for uploads
+
+Optional services:
+
+- Google OAuth
+- Resend email delivery
+- Upstash Redis
+- Cloudflare Turnstile
+
+<Steps>
+  <Step>
+
+  ### Create the Server Vercel Project
+
+  Create a Vercel project for `apps/server`.
+
+  You can do that either by:
+
+  - importing the monorepo in the Vercel dashboard and setting the Root Directory to `apps/server`
+  - cloning the repo locally and linking/deploying with the Vercel CLI
+
+  Important project settings:
+
+  - Root Directory: `apps/server`
+  - Runtime: default Vercel Hono deployment is fine
+  - Build Output Directory: `.dist`
+
+  </Step>
+
+  <Step>
+
+  ### Add the Server Environment Variables
+
+  In the `apps/server` Vercel project, set these required production env vars:
+
+  ```bash
+  DATABASE_URL=postgresql://...
+  BETTER_AUTH_SECRET=generate_a_real_secret_here
+  BETTER_AUTH_URL=https://api.example.com
+  CORS_ORIGINS=https://app.example.com
+  BETTER_AUTH_COOKIE_DOMAIN=example.com
+  ENABLE_PAYMENTS=false
+  STORAGE_BUCKET=...
+  STORAGE_ACCESS_KEY_ID=...
+  STORAGE_SECRET_ACCESS_KEY=...
+  STORAGE_REGION=... # if using AWS S3
+  STORAGE_ENDPOINT=... # if using R2 or another S3-compatible provider
+  ```
+
+  Optional server env:
+
+  ```bash
+  GOOGLE_CLIENT_ID
+  GOOGLE_CLIENT_SECRET
+  RESEND_API_KEY
+  RESEND_FROM_EMAIL
+  CAPTURE_SUBMIT_TOKEN_SECRET
+  UPSTASH_REDIS_REST_URL
+  UPSTASH_REDIS_REST_TOKEN
+  TURNSTILE_SITE_KEY
+  TURNSTILE_SECRET_KEY
+  STORAGE_PUBLIC_URL
+  ```
+
+  If you use Google OAuth, the callback must point at the server domain:
+
+  ```text
+  https://api.example.com/api/auth/callback/google
+  ```
+
+  </Step>
+
+  <Step>
+
+  ### Attach the API Domain
+
+  In the server Vercel project, add the custom production domain:
+
+  ```text
+  api.example.com
+  ```
+
+  Finish the DNS records Vercel gives you, then deploy the server project.
+
+  Quick verification:
+
+  ```bash
+  curl https://api.example.com/
+  ```
+
+  Expected response:
+
+  ```text
+  OK
+  ```
+
+  </Step>
+
+  <Step>
+
+  ### Create the Web Vercel Project
+
+  Create a second Vercel project for `apps/web`.
+
+  You can do that either by:
+
+  - importing the same monorepo again and setting the Root Directory to `apps/web`
+  - linking a second Vercel project from the repo and deploying that app separately
+
+  Important project settings:
+
+  - Root Directory: `apps/web`
+  - Framework: `Next.js`
+  - Build Output Directory: `.next`
+
+  </Step>
+
+  <Step>
+
+  ### Add the Web Environment Variables
+
+  In the `apps/web` Vercel project, set:
+
+  ```bash
+  NEXT_PUBLIC_SITE_URL=https://crikket.io
+  NEXT_PUBLIC_APP_URL=https://app.example.com
+  NEXT_PUBLIC_SERVER_URL=https://api.example.com
+  ```
+
+  `NEXT_PUBLIC_SITE_URL` should stay `https://crikket.io` because it points to the public Crikket site.
+
+  Optional web env:
+
+  ```bash
+  NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true
+  NEXT_PUBLIC_CRIKKET_KEY
+  NEXT_PUBLIC_DEMO_URL
+  NEXT_PUBLIC_POSTHOG_KEY
+  NEXT_PUBLIC_POSTHOG_HOST
+  ```
+
+  </Step>
+
+  <Step>
+
+  ### Attach the Web Domain
+
+  In the web Vercel project, add the custom production domain:
+
+  ```text
+  app.example.com
+  ```
+
+  Finish the DNS records Vercel gives you, then deploy the web project.
+
+  </Step>
+
+  <Step>
+
+  ### Verify the Split-Origin Setup
+
+  These values must stay aligned:
+
+  ```bash
+  NEXT_PUBLIC_APP_URL=https://app.example.com
+  NEXT_PUBLIC_SERVER_URL=https://api.example.com
+  BETTER_AUTH_URL=https://api.example.com
+  CORS_ORIGINS=https://app.example.com
+  BETTER_AUTH_COOKIE_DOMAIN=example.com
+  ```
+
+  Then verify:
+
+  - open `https://app.example.com`
+  - sign in
+  - load dashboard data
+  - create or upload a bug report
+
+  If auth fails, check the five variables above first.
+
+  If uploads fail before the server responds, check bucket CORS and make sure the bucket allows the web origin.
+
+  </Step>
+</Steps>
+
+## References
+
+- [Hono on Vercel](https://vercel.com/docs/frameworks/backend/hono)
+- [Vercel monorepos](https://vercel.com/docs/monorepos)
