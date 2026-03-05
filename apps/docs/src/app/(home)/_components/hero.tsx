@@ -46,7 +46,9 @@ export function Hero() {
           </Link>
           {demoUrl ? (
             <Link href={demoUrl} rel="noopener noreferrer" target="_blank">
-              <Button className="h-12 rounded-full px-8">Live Demo</Button>
+              <Button className="h-12 rounded-full px-8 font-semibold">
+                Live Demo
+              </Button>
             </Link>
           ) : null}
         </div>

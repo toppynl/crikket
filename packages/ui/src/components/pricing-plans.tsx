@@ -125,7 +125,7 @@ export function PricingPlans({
                   "relative flex w-full flex-col transition-all duration-300 hover:shadow-xl",
                   tier.highlighted
                     ? "border-primary/50 shadow-lg ring-1 ring-primary/20"
-                    : "border-border/40 bg-muted/10 hover:border-border/60 hover:bg-muted/30"
+                    : "border-border/40 bg-card hover:border-border/60"
                 )}
               >
                 <CardHeader>
