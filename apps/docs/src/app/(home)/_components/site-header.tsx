@@ -12,24 +12,24 @@ import {
 import { cn } from "@crikket/ui/lib/utils"
 import { Github, Menu } from "lucide-react"
 import Link from "next/link"
-import { type MouseEvent, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 const navLinks = [
   {
     title: "Features",
-    href: "#features",
-  },
-  {
-    title: "Pricing",
-    href: "#pricing",
+    href: "/#features",
   },
   {
     title: "FAQ",
-    href: "#faq",
+    href: "/#faq",
   },
   {
     title: "Documentation",
     href: "/docs",
+  },
+  {
+    title: "Pricing",
+    href: "/pricing",
   },
 ]
 
@@ -44,29 +44,6 @@ export function SiteHeader() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
-
-  const handleSectionNavigation = (
-    event: MouseEvent<HTMLAnchorElement>,
-    href: string
-  ) => {
-    if (!href.startsWith("#")) return
-
-    event.preventDefault()
-
-    const targetElement = document.querySelector(href)
-    if (!targetElement) return
-
-    const headerOffset = 96
-    const top = Math.max(
-      targetElement.getBoundingClientRect().top + window.scrollY - headerOffset,
-      0
-    )
-
-    window.scrollTo({
-      top,
-      behavior: "smooth",
-    })
-  }
 
   return (
     <header
@@ -93,7 +70,6 @@ export function SiteHeader() {
                 className="text-foreground/60 transition-colors hover:text-foreground/80"
                 href={item.href}
                 key={item.href}
-                onClick={(event) => handleSectionNavigation(event, item.href)}
               >
                 {item.title}
               </Link>
@@ -149,10 +125,7 @@ export function SiteHeader() {
                         className="rounded-md px-3 py-2 font-medium text-sm transition-colors hover:bg-muted"
                         href={item.href}
                         key={item.href}
-                        onClick={(event) => {
-                          handleSectionNavigation(event, item.href)
-                          setIsMobileNavOpen(false)
-                        }}
+                        onClick={() => setIsMobileNavOpen(false)}
                       >
                         {item.title}
                       </Link>

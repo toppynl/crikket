@@ -11,7 +11,7 @@ export function CtaSection() {
   return (
     <section className="w-full scroll-mt-28 px-4 sm:px-0">
       <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/70 p-8 text-center shadow-sm backdrop-blur-sm sm:p-12">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(120,119,198,0.12),transparent_55%)]" />
+        <div className="pointer-events-none absolute inset-0" />
         <div className="relative z-10 flex flex-col items-center gap-8">
           <div className="space-y-3">
             <p className="font-medium text-primary text-sm">
