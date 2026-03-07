@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
@@ -38,5 +41,14 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Build SDK dependencies
+        run: bun x turbo run build --filter=@crikket/capture-core --filter=@crikket-io/capture
+
+      - name: Validate package publish
+        if: github.event_name == 'pull_request'
+        working-directory: sdks/capture
+        run: npm publish --dry-run --access public
+
       - name: Publish packages
+        if: github.event_name != 'pull_request'
         run: bun run changeset:publish
