@@ -3,6 +3,8 @@
 # Exit on any error
 set -e
 
+bun run build
+
 bun test
 
 # Check if there are any staged files
