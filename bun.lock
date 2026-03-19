@@ -99,7 +99,7 @@
     },
     "apps/web": {
       "name": "web",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@base-ui/react": "catalog:",
         "@crikket-io/capture": "workspace:*",
@@ -339,7 +339,7 @@
     },
     "sdks/capture": {
       "name": "@crikket-io/capture",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@crikket/capture-core": "workspace:*",
         "@crikket/shared": "workspace:*",
