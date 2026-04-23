@@ -17,6 +17,7 @@ export interface AuthorizedCaptureRequest {
   keyId: string
   organizationId: string
   origin: string
+  projectId: string | null
   publicKeyId: string
   rateLimitHeaders: Record<string, string>
 }
@@ -167,6 +168,7 @@ export async function authorizeCaptureSubmitRequest(input: {
     keyId: resolvedKey.id,
     organizationId: resolvedKey.organizationId,
     origin,
+    projectId: resolvedKey.projectId,
     publicKeyId: resolvedKey.id,
     rateLimitHeaders: rateLimitDecision.headers,
   }

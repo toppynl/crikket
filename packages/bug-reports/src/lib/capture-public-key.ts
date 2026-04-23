@@ -22,6 +22,7 @@ export interface CapturePublicKeyRecord {
   key: string
   label: string
   organizationId: string
+  projectId: string | null
   revokedAt: Date | null
   rotatedAt: Date | null
   status: CapturePublicKeyStatus
@@ -128,6 +129,7 @@ function toCapturePublicKeyRecord(
     key: record.key,
     label: record.label,
     organizationId: record.organizationId,
+    projectId: record.projectId ?? null,
     revokedAt: record.revokedAt,
     rotatedAt: record.rotatedAt,
     status: record.status as CapturePublicKeyStatus,
