@@ -9,6 +9,8 @@ import { runBugReportIngestionPass } from "@crikket/bug-reports/lib/ingestion-jo
 import { runStalePendingBugReportCleanupPass } from "@crikket/bug-reports/lib/orphan-cleanup"
 import { runArtifactCleanupPass } from "@crikket/bug-reports/lib/storage"
 import { env } from "@crikket/env/server"
+import { handleGitHubWebhook } from "@crikket/github/webhooks/handler"
+import { runGitHubWebhookProcessorPass } from "@crikket/github/webhooks/processor"
 import { OpenAPIHandler } from "@orpc/openapi/fetch"
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
 import { onError } from "@orpc/server"
@@ -29,6 +31,7 @@ const MAX_RPC_REQUEST_BODY_BYTES = 110 * 1024 * 1024
 const BUG_REPORT_INGESTION_INTERVAL_MS = 60 * 1000
 const BUG_REPORT_ORPHAN_CLEANUP_INTERVAL_MS = 60 * 60 * 1000
 const STORAGE_CLEANUP_INTERVAL_MS = 5 * 60 * 1000
+const GITHUB_WEBHOOK_PROCESSOR_INTERVAL_MS = 30 * 1000
 type RateLimitHeaders = Record<string, string>
 
 function parseHeaderNumber(value: string | undefined): number | null {
@@ -144,6 +147,18 @@ app.post("/api/embed/bug-report-finalize", (c) => {
   })
 })
 
+app.post("/api/webhooks/github", (c) => handleGitHubWebhook(c.req.raw))
+
+app.get("/api/github/callback", (c) => {
+  const installationId = c.req.query("installation_id")
+  const setupAction = c.req.query("setup_action")
+  const appUrl = env.APP_URL ?? env.BETTER_AUTH_URL
+  const redirectUrl = new URL("/settings/integrations/github", appUrl)
+  if (installationId) redirectUrl.searchParams.set("installation_id", installationId)
+  if (setupAction) redirectUrl.searchParams.set("setup_action", setupAction)
+  return c.redirect(redirectUrl.toString())
+})
+
 const cleanupInterval = setInterval(() => {
   runArtifactCleanupPass({ limit: 50 }).catch((error: unknown) => {
     console.error("[artifact-cleanup] failed scheduled cleanup pass", error)
@@ -173,6 +188,14 @@ const orphanCleanupInterval = setInterval(() => {
 }, BUG_REPORT_ORPHAN_CLEANUP_INTERVAL_MS)
 
 orphanCleanupInterval.unref?.()
+
+const githubWebhookProcessorInterval = setInterval(() => {
+  runGitHubWebhookProcessorPass({ limit: 20 }).catch((error) => {
+    console.error("[github-webhook-processor] failed scheduled pass", error)
+  })
+}, GITHUB_WEBHOOK_PROCESSOR_INTERVAL_MS)
+
+githubWebhookProcessorInterval.unref?.()
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
   plugins: [
