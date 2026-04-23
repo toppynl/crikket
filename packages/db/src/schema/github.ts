@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -20,6 +21,7 @@ export const githubIntegration = pgTable(
     installationId: text("installation_id").notNull(),
     defaultOwner: text("default_owner").notNull(),
     defaultRepo: text("default_repo").notNull(),
+    autoSync: boolean("auto_sync").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()

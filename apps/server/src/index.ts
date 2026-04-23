@@ -9,6 +9,7 @@ import { runBugReportIngestionPass } from "@crikket/bug-reports/lib/ingestion-jo
 import { runStalePendingBugReportCleanupPass } from "@crikket/bug-reports/lib/orphan-cleanup"
 import { runArtifactCleanupPass } from "@crikket/bug-reports/lib/storage"
 import { env } from "@crikket/env/server"
+import { runGitHubAutoSyncPass } from "@crikket/github/service/auto-sync"
 import { handleGitHubWebhook } from "@crikket/github/webhooks/handler"
 import { runGitHubWebhookProcessorPass } from "@crikket/github/webhooks/processor"
 import { OpenAPIHandler } from "@orpc/openapi/fetch"
@@ -32,6 +33,7 @@ const BUG_REPORT_INGESTION_INTERVAL_MS = 60 * 1000
 const BUG_REPORT_ORPHAN_CLEANUP_INTERVAL_MS = 60 * 60 * 1000
 const STORAGE_CLEANUP_INTERVAL_MS = 5 * 60 * 1000
 const GITHUB_WEBHOOK_PROCESSOR_INTERVAL_MS = 30 * 1000
+const GITHUB_AUTO_SYNC_INTERVAL_MS = 30 * 1000
 type RateLimitHeaders = Record<string, string>
 
 function parseHeaderNumber(value: string | undefined): number | null {
@@ -197,6 +199,14 @@ const githubWebhookProcessorInterval = setInterval(() => {
 }, GITHUB_WEBHOOK_PROCESSOR_INTERVAL_MS)
 
 githubWebhookProcessorInterval.unref?.()
+
+const githubAutoSyncInterval = setInterval(() => {
+  runGitHubAutoSyncPass({ limit: 20 }).catch((error) => {
+    console.error("[github-auto-sync] failed scheduled pass", error)
+  })
+}, GITHUB_AUTO_SYNC_INTERVAL_MS)
+
+githubAutoSyncInterval.unref?.()
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
   plugins: [

@@ -7,7 +7,8 @@ import { getInstallationDetails } from "../client"
 export async function configureGitHubIntegration(
   organizationId: string,
   installationId: string,
-  defaultRepo: string
+  defaultRepo: string,
+  autoSync?: boolean
 ): Promise<void> {
   const details = await getInstallationDetails(installationId)
   const account = details.account as { login?: string } | null | undefined
@@ -25,6 +26,7 @@ export async function configureGitHubIntegration(
       installationId,
       defaultOwner,
       defaultRepo,
+      autoSync: autoSync ?? false,
     })
     .onConflictDoUpdate({
       target: githubIntegration.organizationId,
@@ -32,6 +34,7 @@ export async function configureGitHubIntegration(
         installationId,
         defaultOwner,
         defaultRepo,
+        ...(autoSync !== undefined ? { autoSync } : {}),
         updatedAt: new Date(),
       },
     })

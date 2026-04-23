@@ -9,6 +9,7 @@ export const configure = protectedProcedure
     z.object({
       installationId: z.string(),
       defaultRepo: z.string().min(1),
+      autoSync: z.boolean().optional(),
     })
   )
   .handler(async ({ context, input }) => {
@@ -18,7 +19,8 @@ export const configure = protectedProcedure
       await configureGitHubIntegration(
         organizationId,
         input.installationId,
-        input.defaultRepo
+        input.defaultRepo,
+        input.autoSync
       )
     } catch (error) {
       throw new ORPCError("BAD_REQUEST", {

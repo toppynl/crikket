@@ -10,6 +10,7 @@ import {
 } from "@crikket/ui/components/ui/card"
 import { Field, FieldError, FieldLabel } from "@crikket/ui/components/ui/field"
 import { Input } from "@crikket/ui/components/ui/input"
+import { Checkbox } from "@crikket/ui/components/ui/checkbox"
 import { useForm } from "@tanstack/react-form"
 import { Github } from "lucide-react"
 import { useSearchParams } from "next/navigation"
@@ -21,6 +22,7 @@ import { client } from "@/utils/orpc"
 const githubIntegrationFormSchema = z.object({
   installationId: z.string(),
   defaultRepo: z.string().min(1, "Repository name is required"),
+  autoSync: z.boolean(),
 })
 
 type Props = {
@@ -29,6 +31,7 @@ type Props = {
     installationId: string
     defaultOwner: string
     defaultRepo: string
+    autoSync: boolean
   } | null
   organizationId: string
 }
@@ -47,6 +50,7 @@ export function GitHubIntegrationCard({
       installationId:
         pendingInstallationId ?? currentConfig?.installationId ?? "",
       defaultRepo: currentConfig?.defaultRepo ?? "",
+      autoSync: currentConfig?.autoSync ?? false,
     },
     validators: {
       onChange: githubIntegrationFormSchema,
@@ -56,6 +60,7 @@ export function GitHubIntegrationCard({
         await client.github.configure({
           installationId: value.installationId,
           defaultRepo: value.defaultRepo,
+          autoSync: value.autoSync,
         })
         toast.success("GitHub integration saved")
         router.replace("/settings/integrations/github")
@@ -168,6 +173,31 @@ export function GitHubIntegrationCard({
                 )
               }}
             </form.Field>
+
+            {currentConfig && (
+              <form.Field name="autoSync">
+                {(field) => (
+                  <div className="flex items-start gap-3 rounded-lg border p-4">
+                    <Checkbox
+                      checked={field.state.value}
+                      id={field.name}
+                      onCheckedChange={(checked) =>
+                        field.handleChange(checked === true)
+                      }
+                    />
+                    <div className="space-y-0.5">
+                      <FieldLabel htmlFor={field.name}>
+                        Auto-sync new reports
+                      </FieldLabel>
+                      <p className="text-muted-foreground text-sm">
+                        Automatically forward every new bug report to GitHub
+                        Issues.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </form.Field>
+            )}
 
             <div className="flex gap-2">
               <Button disabled={form.state.isSubmitting} type="submit">

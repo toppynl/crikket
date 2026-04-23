@@ -7,7 +7,13 @@
       "default": "./src/*.ts"
     }
   },
+  "scripts": {
+    "check-types": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test test"
+  },
   "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/s3-request-presigner": "catalog:",
     "@crikket/db": "workspace:*",
     "@crikket/env": "workspace:*",
     "@crikket/shared": "workspace:*",
