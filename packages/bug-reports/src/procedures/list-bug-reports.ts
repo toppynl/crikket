@@ -1,5 +1,6 @@
 import { db } from "@crikket/db"
 import { bugReport } from "@crikket/db/schema/bug-report"
+import { githubIssueLink } from "@crikket/db/schema/github"
 import {
   BUG_REPORT_DEBUGGER_INGESTION_STATUS_OPTIONS,
   BUG_REPORT_SORT_OPTIONS,
@@ -62,6 +63,7 @@ export interface BugReportListItem {
   priority: Priority
   tags: string[]
   url: string | undefined
+  githubIssueUrl: string | undefined
   createdAt: string
   updatedAt: string
 }
@@ -186,6 +188,7 @@ interface BugReportListRecord {
   priority: string
   tags: string[] | null
   url: string | null
+  githubIssueUrl: string | undefined
   createdAt: Date
   updatedAt: Date
   reporter: {
@@ -255,6 +258,7 @@ async function mapBugReportListItem(
     priority: normalizePriority(report.priority),
     tags: Array.isArray(report.tags) ? report.tags : [],
     url: report.url ?? undefined,
+    githubIssueUrl: report.githubIssueUrl,
     uploader,
     createdAt: report.createdAt.toISOString(),
     updatedAt: report.updatedAt.toISOString(),
@@ -321,9 +325,28 @@ export const listBugReports = protectedProcedure
 
       const totalCount = countResult[0]?.value ?? 0
 
+      // Fetch GitHub issue links for this page
+      const bugReportIds = bugReports.map((r) => r.id)
+      const githubLinks =
+        bugReportIds.length > 0
+          ? await db
+              .select({
+                bugReportId: githubIssueLink.bugReportId,
+                issueUrl: githubIssueLink.issueUrl,
+              })
+              .from(githubIssueLink)
+              .where(inArray(githubIssueLink.bugReportId, bugReportIds))
+          : []
+      const githubLinkMap = new Map(
+        githubLinks.map((l) => [l.bugReportId, l.issueUrl])
+      )
+
       const items = await Promise.all(
         bugReports.map((report) =>
-          mapBugReportListItem(report as BugReportListRecord)
+          mapBugReportListItem({
+            ...report,
+            githubIssueUrl: githubLinkMap.get(report.id),
+          } as BugReportListRecord)
         )
       )
 

@@ -85,7 +85,9 @@ export function BugReportCard({
       BUG_REPORT_DEBUGGER_INGESTION_STATUS_OPTIONS.failed &&
     report.submissionStatus === BUG_REPORT_SUBMISSION_STATUS_OPTIONS.failed
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false)
-  const [githubIssueUrl, setGithubIssueUrl] = useState<string | null>(null)
+  const [githubIssueUrl, setGithubIssueUrl] = useState<string | null>(
+    report.githubIssueUrl ?? null
+  )
   const [isPushing, setIsPushing] = useState(false)
 
   async function handlePushToGitHub() {
