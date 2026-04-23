@@ -145,6 +145,7 @@
         "@crikket/bug-reports": "workspace:*",
         "@crikket/db": "workspace:*",
         "@crikket/env": "workspace:*",
+        "@crikket/github": "workspace:*",
         "@crikket/shared": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
