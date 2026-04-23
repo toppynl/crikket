@@ -35,6 +35,10 @@ export async function runGitHubWebhookProcessorPass(
       const payload = event.payload as Record<string, unknown>
       const action = (payload.action) as string | undefined
 
+      const handled =
+        event.eventType === "issues" &&
+        (action === "closed" || action === "reopened")
+
       if (event.eventType === "issues") {
         if (action === "closed") {
           await processIssuesClosed(payload as Parameters<typeof processIssuesClosed>[0])
@@ -45,7 +49,7 @@ export async function runGitHubWebhookProcessorPass(
 
       await db
         .update(githubWebhookEvent)
-        .set({ status: "processed", processedAt: new Date() })
+        .set({ status: handled ? "processed" : "ignored", processedAt: new Date() })
         .where(eq(githubWebhookEvent.id, event.id))
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)

@@ -9,8 +9,11 @@ function verifySignature(payload: string, signature: string, secret: string): bo
   hmac.update(payload)
   const expected = Buffer.from(`sha256=${hmac.digest("hex")}`)
   const actual = Buffer.from(signature)
-  if (expected.length !== actual.length) return false
-  return timingSafeEqual(expected, actual)
+  try {
+    return timingSafeEqual(expected, actual)
+  } catch {
+    return false
+  }
 }
 
 export async function handleGitHubWebhook(request: Request): Promise<Response> {
