@@ -115,9 +115,14 @@ let _githubIntegrationRef: unknown
 mock.module("@crikket/db/schema/github", () => {
   const link = { _tag: "githubIssueLink" }
   const integration = { _tag: "githubIntegration" }
+  const projConfig = { _tag: "projectGithubConfig" }
   githubIssueLinkRef = link
   _githubIntegrationRef = integration
-  return { githubIssueLink: link, githubIntegration: integration }
+  return {
+    githubIssueLink: link,
+    githubIntegration: integration,
+    projectGithubConfig: projConfig,
+  }
 })
 
 mock.module("@crikket/db/schema/bug-report", () => ({
