@@ -8,12 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@crikket/ui/components/ui/card"
+import { Field, FieldError, FieldLabel } from "@crikket/ui/components/ui/field"
 import { Input } from "@crikket/ui/components/ui/input"
 import { useForm } from "@tanstack/react-form"
 import { Github } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { useRouter } from "nextjs-toploader/app"
 import { toast } from "sonner"
+import * as z from "zod"
 import { client } from "@/utils/orpc"
+
+const githubIntegrationFormSchema = z.object({
+  installationId: z.string(),
+  defaultRepo: z.string().min(1, "Repository name is required"),
+})
 
 type Props = {
   githubAppSlug: string | undefined
@@ -40,6 +48,9 @@ export function GitHubIntegrationCard({
         pendingInstallationId ?? currentConfig?.installationId ?? "",
       defaultRepo: currentConfig?.defaultRepo ?? "",
     },
+    validators: {
+      onChange: githubIntegrationFormSchema,
+    },
     onSubmit: async ({ value }) => {
       try {
         await client.github.configure({
@@ -56,6 +67,9 @@ export function GitHubIntegrationCard({
   })
 
   async function handleDisconnect() {
+    // biome-ignore lint/suspicious/noAlert: intentional simple confirmation for destructive action
+    if (!confirm("Disconnect GitHub integration? This cannot be undone."))
+      return
     try {
       await client.github.deleteConfig()
       toast.success("GitHub integration disconnected")
@@ -109,6 +123,7 @@ export function GitHubIntegrationCard({
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault()
+              e.stopPropagation()
               form.handleSubmit()
             }}
           >
@@ -123,23 +138,35 @@ export function GitHubIntegrationCard({
             </form.Field>
 
             <form.Field name="defaultRepo">
-              {(field) => (
-                <div className="space-y-1">
-                  <label className="font-medium text-sm" htmlFor="defaultRepo">
-                    Default repository
-                  </label>
-                  <Input
-                    id="defaultRepo"
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="my-repo"
-                    value={field.state.value}
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    Repository name only (e.g. <code>my-repo</code>). The owner
-                    is resolved from your GitHub App installation.
-                  </p>
-                </div>
-              )}
+              {(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched &&
+                  field.state.meta.errors.length > 0
+
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name}>
+                      Default repository
+                    </FieldLabel>
+                    <Input
+                      aria-invalid={isInvalid}
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="my-repo"
+                      value={field.state.value}
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Repository name only (e.g. <code>my-repo</code>). The
+                      owner is resolved from your GitHub App installation.
+                    </p>
+                    {isInvalid ? (
+                      <FieldError errors={field.state.meta.errors} />
+                    ) : null}
+                  </Field>
+                )
+              }}
             </form.Field>
 
             <div className="flex gap-2">

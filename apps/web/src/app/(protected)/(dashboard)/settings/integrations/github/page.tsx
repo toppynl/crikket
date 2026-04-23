@@ -26,7 +26,7 @@ export default async function GitHubIntegrationPage() {
   return (
     <div className="space-y-4">
       <h2 className="font-semibold text-xl">GitHub Integration</h2>
-      <Suspense>
+      <Suspense fallback={null}>
         <GitHubIntegrationCard
           currentConfig={currentConfig}
           githubAppSlug={env.NEXT_PUBLIC_GITHUB_APP_SLUG}
