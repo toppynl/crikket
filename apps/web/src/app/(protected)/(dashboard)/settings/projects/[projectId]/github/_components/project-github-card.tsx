@@ -64,8 +64,10 @@ export function ProjectGithubCard({
   })
 
   async function handleDisconnect() {
-    // biome-ignore lint/suspicious/noAlert: intentional simple confirmation for destructive action
-    if (!confirm("Remove GitHub config for this project? This cannot be undone."))
+    if (
+      // biome-ignore lint/suspicious/noAlert: intentional simple confirmation for destructive action
+      !confirm("Remove GitHub config for this project? This cannot be undone.")
+    )
       return
     try {
       await client.github.deleteProjectConfig({ projectId })
@@ -88,19 +90,7 @@ export function ProjectGithubCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!orgInstallationId ? (
-          <p className="text-muted-foreground text-sm">
-            No GitHub App installed at the org level. Configure the org
-            integration first at{" "}
-            <a
-              className="underline"
-              href="/settings/integrations/github"
-            >
-              Settings → Integrations → GitHub
-            </a>
-            .
-          </p>
-        ) : (
+        {orgInstallationId ? (
           <form
             className="space-y-4"
             onSubmit={(e) => {
@@ -182,6 +172,15 @@ export function ProjectGithubCard({
               )}
             </div>
           </form>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            No GitHub App installed at the org level. Configure the org
+            integration first at{" "}
+            <a className="underline" href="/settings/integrations/github">
+              Settings → Integrations → GitHub
+            </a>
+            .
+          </p>
         )}
       </CardContent>
     </Card>

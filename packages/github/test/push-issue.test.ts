@@ -110,13 +110,13 @@ mock.module("@crikket/db", () => ({
 }))
 
 let githubIssueLinkRef: unknown
-let githubIntegrationRef: unknown
+let _githubIntegrationRef: unknown
 
 mock.module("@crikket/db/schema/github", () => {
   const link = { _tag: "githubIssueLink" }
   const integration = { _tag: "githubIntegration" }
   githubIssueLinkRef = link
-  githubIntegrationRef = integration
+  _githubIntegrationRef = integration
   return { githubIssueLink: link, githubIntegration: integration }
 })
 
@@ -132,39 +132,40 @@ mock.module("@crikket/env/server", () => ({
 
 mock.module("../src/client", () => ({
   getInstallationOctokit: async () => ({
-    request: async (route: string, params: Record<string, unknown>) => {
+    request: (route: string, params: Record<string, unknown>) => {
       state.octokitRequests.push({ route, params })
       if (route === "GET /repos/{owner}/{repo}/labels") {
-        return { data: [] }
+        return Promise.resolve({ data: [] })
       }
       if (route === "POST /repos/{owner}/{repo}/labels") {
-        return { data: {} }
+        return Promise.resolve({ data: {} })
       }
       if (route === "POST /repos/{owner}/{repo}/issues") {
-        return {
+        return Promise.resolve({
           data: {
             number: state.createdIssueNumber,
             html_url: state.createdIssueUrl,
           },
-        }
+        })
       }
-      return { data: {} }
+      return Promise.resolve({ data: {} })
     },
   }),
 }))
 
 mock.module("@aws-sdk/client-s3", () => ({
   GetObjectCommand: class {
-    constructor(public input: unknown) {}
+    input: unknown
+    constructor(input: unknown) {
+      this.input = input
+    }
   },
-  S3Client: class {
-    constructor() {}
-  },
+  S3Client: class {},
 }))
 
 mock.module("@aws-sdk/s3-request-presigner", () => ({
-  getSignedUrl: async (_client: unknown, command: { input: { Key: string } }) => {
-    return `https://presigned.example.com/${command.input.Key}`
+  getSignedUrl: (_client: unknown, command: { input: { Key: string } }) => {
+    return Promise.resolve(`https://presigned.example.com/${command.input.Key}`)
   },
 }))
 
@@ -259,7 +260,9 @@ describe("pushBugReportToGitHub: successful push", () => {
     const issuePost = state.octokitRequests.find(
       (r) => r.route === "POST /repos/{owner}/{repo}/issues"
     )
-    expect(issuePost?.params.body as string).toContain("https://cdn.example.com")
+    expect(issuePost?.params.body as string).toContain(
+      "https://cdn.example.com"
+    )
   })
 
   it("uses presigned URL when STORAGE_PUBLIC_URL is not set", async () => {

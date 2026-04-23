@@ -40,6 +40,82 @@ interface PublicKeysManagementProps {
   initialKeys: PublicKeysSnapshot
 }
 
+interface AssignToProjectDialogProps {
+  assigningKey: PublicKeysSnapshot[number] | null
+  assigningKeyId: string | null
+  isAssigning: boolean
+  onClose: () => void
+  onSave: (keyId: string, projectId: string | null) => Promise<void>
+  projects: Array<{ id: string; name: string }>
+  selectedProjectId: string | null
+  onSelectProject: (id: string | null) => void
+}
+
+function AssignToProjectDialog({
+  assigningKey,
+  assigningKeyId,
+  isAssigning,
+  onClose,
+  onSave,
+  projects,
+  selectedProjectId,
+  onSelectProject,
+}: AssignToProjectDialogProps) {
+  return (
+    <Dialog
+      onOpenChange={(open) => !open && onClose()}
+      open={assigningKeyId !== null}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assign to project</DialogTitle>
+          <DialogDescription>
+            {assigningKey
+              ? `Select the project for "${assigningKey.label}", or clear to remove the assignment.`
+              : "Select a project to assign this key to."}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Select
+            onValueChange={(value) =>
+              onSelectProject(value === "__none__" ? null : value)
+            }
+            value={selectedProjectId ?? "__none__"}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="No project" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">No project</SelectItem>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex justify-end gap-2">
+            <Button onClick={onClose} type="button" variant="outline">
+              Cancel
+            </Button>
+            <Button
+              disabled={isAssigning}
+              onClick={async () => {
+                if (!assigningKeyId) return
+                await onSave(assigningKeyId, selectedProjectId)
+                onClose()
+              }}
+              type="button"
+            >
+              {isAssigning ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function PublicKeysManagement({
   canManage,
   initialKeys,
@@ -75,7 +151,7 @@ export function PublicKeysManagement({
   const updatingKeyId = updateMutation.variables?.keyId ?? null
 
   const assigningKey = assigningKeyId
-    ? keys.find((k) => k.id === assigningKeyId) ?? null
+    ? (keys.find((k) => k.id === assigningKeyId) ?? null)
     : null
 
   function openAssignDialog(keyId: string) {
@@ -87,6 +163,21 @@ export function PublicKeysManagement({
   function closeAssignDialog() {
     setAssigningKeyId(null)
     setSelectedProjectId(null)
+  }
+
+  const pendingKeyIds = {
+    assigning: assignToProjectMutation.isPending
+      ? (assignToProjectMutation.variables?.keyId ?? null)
+      : null,
+    deleting: deleteMutation.isPending
+      ? (deleteMutation.variables?.keyId ?? null)
+      : null,
+    revoking: revokeMutation.isPending
+      ? (revokeMutation.variables?.keyId ?? null)
+      : null,
+    rotating: rotateMutation.isPending
+      ? (rotateMutation.variables?.keyId ?? null)
+      : null,
   }
 
   return (
@@ -113,41 +204,17 @@ export function PublicKeysManagement({
         <CardContent>
           {keys.length > 0 ? (
             <PublicKeysTable
-              assigningToProjectKeyId={
-                assignToProjectMutation.isPending
-                  ? (assignToProjectMutation.variables?.keyId ?? null)
-                  : null
-              }
+              assigningToProjectKeyId={pendingKeyIds.assigning}
               canManage={canManage}
-              deletingKeyId={
-                deleteMutation.isPending
-                  ? (deleteMutation.variables?.keyId ?? null)
-                  : null
-              }
+              deletingKeyId={pendingKeyIds.deleting}
               items={keys}
               onAssignToProject={openAssignDialog}
-              onDelete={async (input) => {
-                await deleteMutation.mutateAsync(input)
-              }}
-              onEdit={(item) => {
-                setEditingItem(item)
-              }}
-              onRevoke={async (input) => {
-                await revokeMutation.mutateAsync(input)
-              }}
-              onRotate={async (input) => {
-                await rotateMutation.mutateAsync(input)
-              }}
-              revokingKeyId={
-                revokeMutation.isPending
-                  ? (revokeMutation.variables?.keyId ?? null)
-                  : null
-              }
-              rotatingKeyId={
-                rotateMutation.isPending
-                  ? (rotateMutation.variables?.keyId ?? null)
-                  : null
-              }
+              onDelete={(input) => deleteMutation.mutateAsync(input)}
+              onEdit={(item) => setEditingItem(item)}
+              onRevoke={(input) => revokeMutation.mutateAsync(input)}
+              onRotate={(input) => rotateMutation.mutateAsync(input)}
+              revokingKeyId={pendingKeyIds.revoking}
+              rotatingKeyId={pendingKeyIds.rotating}
             />
           ) : (
             <div className="text-muted-foreground text-sm">
@@ -178,11 +245,7 @@ export function PublicKeysManagement({
       </Dialog>
 
       <Dialog
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditingItem(null)
-          }
-        }}
+        onOpenChange={(open) => !open && setEditingItem(null)}
         open={editingItem !== null}
       >
         <DialogContent>
@@ -217,61 +280,18 @@ export function PublicKeysManagement({
         </DialogContent>
       </Dialog>
 
-      <Dialog onOpenChange={(open) => !open && closeAssignDialog()} open={assigningKeyId !== null}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign to project</DialogTitle>
-            <DialogDescription>
-              {assigningKey
-                ? `Select the project for "${assigningKey.label}", or clear to remove the assignment.`
-                : "Select a project to assign this key to."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Select
-              onValueChange={(value) =>
-                setSelectedProjectId(value === "__none__" ? null : value)
-              }
-              value={selectedProjectId ?? "__none__"}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="No project" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">No project</SelectItem>
-                {projects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={closeAssignDialog}
-                type="button"
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={assignToProjectMutation.isPending}
-                onClick={async () => {
-                  if (!assigningKeyId) return
-                  await assignToProjectMutation.mutateAsync({
-                    keyId: assigningKeyId,
-                    projectId: selectedProjectId,
-                  })
-                  closeAssignDialog()
-                }}
-                type="button"
-              >
-                {assignToProjectMutation.isPending ? "Saving..." : "Save"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AssignToProjectDialog
+        assigningKey={assigningKey}
+        assigningKeyId={assigningKeyId}
+        isAssigning={assignToProjectMutation.isPending}
+        onClose={closeAssignDialog}
+        onSave={(keyId, projectId) =>
+          assignToProjectMutation.mutateAsync({ keyId, projectId })
+        }
+        onSelectProject={setSelectedProjectId}
+        projects={projects}
+        selectedProjectId={selectedProjectId}
+      />
     </div>
   )
 }

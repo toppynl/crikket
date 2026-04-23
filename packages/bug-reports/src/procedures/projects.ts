@@ -33,7 +33,7 @@ function rethrowProjectError(error: unknown): never {
 }
 
 export const listProjectsProcedure = protectedProcedure.handler(
-  async ({ context }) => {
+  ({ context }) => {
     const organizationId = requireActiveOrgId(context.session)
     return listProjects({ organizationId })
   }
@@ -60,7 +60,8 @@ export const updateProjectProcedure = protectedProcedure
   .handler(async ({ context, input }) => {
     const organizationId = await requireActiveOrgAdmin(context.session)
     const existing = await getProjectById({ id: input.id, organizationId })
-    if (!existing) throw new ORPCError("NOT_FOUND", { message: "Project not found." })
+    if (!existing)
+      throw new ORPCError("NOT_FOUND", { message: "Project not found." })
     try {
       return await updateProject({
         id: input.id,
@@ -78,6 +79,7 @@ export const deleteProjectProcedure = protectedProcedure
   .handler(async ({ context, input }) => {
     const organizationId = await requireActiveOrgAdmin(context.session)
     const existing = await getProjectById({ id: input.id, organizationId })
-    if (!existing) throw new ORPCError("NOT_FOUND", { message: "Project not found." })
+    if (!existing)
+      throw new ORPCError("NOT_FOUND", { message: "Project not found." })
     await deleteProject({ id: input.id, organizationId })
   })

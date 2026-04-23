@@ -2,7 +2,11 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { db } from "@crikket/db"
 import { bugReport } from "@crikket/db/schema/bug-report"
-import { githubIntegration, githubIssueLink, projectGithubConfig } from "@crikket/db/schema/github"
+import {
+  githubIntegration,
+  githubIssueLink,
+  projectGithubConfig,
+} from "@crikket/db/schema/github"
 import { env } from "@crikket/env/server"
 import { and, asc, eq } from "drizzle-orm"
 import { nanoid } from "nanoid"
@@ -10,6 +14,7 @@ import { getInstallationOctokit } from "../client"
 import { ensureLabelsExist, mapBugReportToIssue } from "../issue-mapper"
 
 const DEFAULT_ARTIFACT_URL_TTL_SECONDS = 31_536_000
+const TRAILING_SLASH_REGEX = /\/$/
 
 export type PushIssueResult = {
   issueUrl: string
@@ -67,7 +72,6 @@ export async function pushBugReportToGitHub(
 
   let owner: string
   let repo: string
-  let installationId: string
 
   const orgIntegration = await db
     .select()
@@ -80,7 +84,7 @@ export async function pushBugReportToGitHub(
     throw new Error("GitHub integration not configured")
   }
 
-  installationId = orgIntegration.installationId
+  const installationId = orgIntegration.installationId
 
   if (report.projectId) {
     const projConfig = await db
@@ -108,7 +112,8 @@ export async function pushBugReportToGitHub(
   }
 
   const ttl =
-    env.GITHUB_ISSUE_ARTIFACT_URL_TTL_SECONDS ?? DEFAULT_ARTIFACT_URL_TTL_SECONDS
+    env.GITHUB_ISSUE_ARTIFACT_URL_TTL_SECONDS ??
+    DEFAULT_ARTIFACT_URL_TTL_SECONDS
 
   const [captureUrl, debuggerUrl] = await Promise.all([
     resolveArtifactUrl(report.captureKey ?? null, ttl),
@@ -163,27 +168,29 @@ export async function pushBugReportToGitHub(
   }
 }
 
-async function resolveArtifactUrl(
+function resolveArtifactUrl(
   key: string | null,
   ttlSeconds: number
 ): Promise<string | null> {
-  if (!key) return null
+  if (!key) return Promise.resolve(null)
 
   if (env.STORAGE_PUBLIC_URL) {
-    const base = env.STORAGE_PUBLIC_URL.replace(/\/$/, "")
+    const base = env.STORAGE_PUBLIC_URL.replace(TRAILING_SLASH_REGEX, "")
     const encodedKey = key
       .split("/")
       .map((s) => encodeURIComponent(s))
       .join("/")
-    return `${base}/${encodedKey}`
+    return Promise.resolve(`${base}/${encodedKey}`)
   }
 
   if (
-    !env.STORAGE_BUCKET ||
-    !env.STORAGE_ACCESS_KEY_ID ||
-    !env.STORAGE_SECRET_ACCESS_KEY
+    !(
+      env.STORAGE_BUCKET &&
+      env.STORAGE_ACCESS_KEY_ID &&
+      env.STORAGE_SECRET_ACCESS_KEY
+    )
   ) {
-    return null
+    return Promise.resolve(null)
   }
 
   const region =

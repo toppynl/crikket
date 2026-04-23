@@ -11,10 +11,7 @@ const projectFormSchema = z.object({
   slug: z
     .string()
     .min(1, "Slug is required")
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Only lowercase letters, numbers, and hyphens"
-    ),
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
   description: z.string(),
 })
 
@@ -31,7 +28,7 @@ export function ProjectForm({ isPending, onSubmit }: Props) {
   const form = useForm({
     defaultValues: { name: "", slug: "", description: "" },
     validators: { onChange: projectFormSchema },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       onSubmit({
         name: value.name,
         slug: value.slug,
