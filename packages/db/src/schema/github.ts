@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/pg-core"
 import { organization } from "./auth"
 import { bugReport, capturePublicKey } from "./bug-report"
+import { project } from "./project"
 
 export const githubIntegration = pgTable(
   "github_integration",
@@ -98,5 +99,30 @@ export const githubWebhookEvent = pgTable(
   (table) => [
     index("github_webhook_event_status_idx").on(table.status),
     index("github_webhook_event_type_idx").on(table.eventType),
+  ]
+)
+
+export const projectGithubConfig = pgTable(
+  "project_github_config",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .unique()
+      .references(() => project.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    autoSync: boolean("auto_sync").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("project_github_config_org_idx").on(table.organizationId),
   ]
 )
