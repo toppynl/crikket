@@ -28,7 +28,6 @@ export const githubIntegration = pgTable(
   },
   (table) => [
     unique("github_integration_org_unique").on(table.organizationId),
-    index("github_integration_org_idx").on(table.organizationId),
   ]
 )
 
@@ -40,7 +39,9 @@ export const githubCaptureKeyOverride = pgTable(
       .notNull()
       .unique()
       .references(() => capturePublicKey.id, { onDelete: "cascade" }),
-    organizationId: text("organization_id").notNull(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -61,7 +62,9 @@ export const githubIssueLink = pgTable(
     bugReportId: text("bug_report_id")
       .notNull()
       .references(() => bugReport.id, { onDelete: "cascade" }),
-    organizationId: text("organization_id").notNull(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
     issueNumber: integer("issue_number").notNull(),
