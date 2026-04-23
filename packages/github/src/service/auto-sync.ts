@@ -1,6 +1,6 @@
 import { db } from "@crikket/db"
 import { bugReport } from "@crikket/db/schema/bug-report"
-import { githubIntegration, githubIssueLink } from "@crikket/db/schema/github"
+import { githubIntegration, githubIssueLink, projectGithubConfig } from "@crikket/db/schema/github"
 import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import { and, eq, gt, notExists } from "drizzle-orm"
 import { pushBugReportToGitHub } from "./push-issue"
@@ -16,7 +16,7 @@ export async function runGitHubAutoSyncPass(options?: {
   const limit = options?.limit ?? 20
   const windowStart = new Date(Date.now() - AUTO_SYNC_WINDOW_MS)
 
-  const candidates = await db
+  const orgCandidates = await db
     .select({
       id: bugReport.id,
       organizationId: bugReport.organizationId,
@@ -41,6 +41,40 @@ export async function runGitHubAutoSyncPass(options?: {
       )
     )
     .limit(limit)
+
+  const projectCandidates = await db
+    .select({
+      id: bugReport.id,
+      organizationId: bugReport.organizationId,
+    })
+    .from(bugReport)
+    .innerJoin(
+      projectGithubConfig,
+      and(
+        eq(projectGithubConfig.organizationId, bugReport.organizationId),
+        eq(projectGithubConfig.projectId, bugReport.projectId),
+        eq(projectGithubConfig.autoSync, true)
+      )
+    )
+    .where(
+      and(
+        gt(bugReport.createdAt, windowStart),
+        notExists(
+          db
+            .select({ id: githubIssueLink.id })
+            .from(githubIssueLink)
+            .where(eq(githubIssueLink.bugReportId, bugReport.id))
+        )
+      )
+    )
+    .limit(limit)
+
+  // Deduplicate by id (a report may qualify via both org-level and project-level autoSync)
+  const seen = new Map<string, { id: string; organizationId: string }>()
+  for (const c of [...orgCandidates, ...projectCandidates]) {
+    seen.set(c.id, c)
+  }
+  const candidates = Array.from(seen.values()).slice(0, limit)
 
   let pushed = 0
   let skipped = 0
