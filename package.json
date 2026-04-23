@@ -71,7 +71,8 @@
       "fumadocs-core": "^16.5.0",
       "fumadocs-mdx": "^14.2.6",
       "fumadocs-ui": "^16.5.0",
-      "posthog-js": "^1.354.3"
+      "posthog-js": "^1.354.3",
+      "@octokit/app": "^15.1.0"
     }
   },
   "type": "module",
