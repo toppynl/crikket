@@ -1,3 +1,5 @@
+import type { Octokit } from "@octokit/core"
+
 const PRIORITY_LABEL_COLORS: Record<string, string> = {
   "priority: critical": "b60205",
   "priority: high": "e4e669",
@@ -57,8 +59,7 @@ export function mapBugReportToIssue(
 }
 
 export async function ensureLabelsExist(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  octokit: any,
+  octokit: Octokit,
   owner: string,
   repo: string,
   labels: string[],
@@ -80,7 +81,9 @@ export async function ensureLabelsExist(
           name: label,
           color: labelColors[label] ?? "ededed",
         })
-        .catch(() => {})
+        .catch((err: unknown) => {
+          if ((err as { status?: number }).status !== 422) throw err
+        })
     }
   }
 }

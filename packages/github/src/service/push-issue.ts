@@ -56,9 +56,10 @@ export async function pushBugReportToGitHub(
     throw new Error("GitHub integration not configured for this organization")
   }
 
-  const { owner, repo } = { owner: integration.defaultOwner, repo: integration.defaultRepo }
+  const owner = integration.defaultOwner
+  const repo = integration.defaultRepo
 
-  const crikketAppUrl = env.BETTER_AUTH_URL
+  const crikketAppUrl = env.APP_URL ?? env.BETTER_AUTH_URL
   const { title, body, labels, labelColors } = mapBugReportToIssue(
     {
       id: report.id,
