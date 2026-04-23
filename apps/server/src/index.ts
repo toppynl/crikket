@@ -154,7 +154,8 @@ app.get("/api/github/callback", (c) => {
   const setupAction = c.req.query("setup_action")
   const appUrl = env.APP_URL ?? env.BETTER_AUTH_URL
   const redirectUrl = new URL("/settings/integrations/github", appUrl)
-  if (installationId) redirectUrl.searchParams.set("installation_id", installationId)
+  if (installationId)
+    redirectUrl.searchParams.set("installation_id", installationId)
   if (setupAction) redirectUrl.searchParams.set("setup_action", setupAction)
   return c.redirect(redirectUrl.toString())
 })

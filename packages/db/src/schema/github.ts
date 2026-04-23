@@ -26,9 +26,7 @@ export const githubIntegration = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [
-    unique("github_integration_org_unique").on(table.organizationId),
-  ]
+  (table) => [unique("github_integration_org_unique").on(table.organizationId)]
 )
 
 export const githubCaptureKeyOverride = pgTable(
