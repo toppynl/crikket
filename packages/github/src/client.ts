@@ -19,7 +19,7 @@ function getApp(): App {
   return _app
 }
 
-export async function getInstallationOctokit(installationId: string) {
+export function getInstallationOctokit(installationId: string) {
   return getApp().getInstallationOctokit(Number(installationId))
 }
 

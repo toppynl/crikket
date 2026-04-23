@@ -7,7 +7,7 @@ import { processIssuesReopened } from "./processors/issues-reopened"
 async function claimNextEvent() {
   const stuckBefore = new Date(Date.now() - 5 * 60 * 1000)
 
-  return db.transaction(async (tx) => {
+  return await db.transaction(async (tx) => {
     const [event] = await tx
       .select()
       .from(githubWebhookEvent)

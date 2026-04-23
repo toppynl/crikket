@@ -7,5 +7,5 @@ export const getConfig = protectedProcedure
   .handler(async ({ context }) => {
     const organizationId = context.session.session.activeOrganizationId
     if (!organizationId) return null
-    return getGitHubIntegration(organizationId)
+    return await getGitHubIntegration(organizationId)
   })
