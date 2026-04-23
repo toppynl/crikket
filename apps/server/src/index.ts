@@ -152,7 +152,7 @@ app.post("/api/webhooks/github", (c) => handleGitHubWebhook(c.req.raw))
 app.get("/api/github/callback", (c) => {
   const installationId = c.req.query("installation_id")
   const setupAction = c.req.query("setup_action")
-  const appUrl = env.APP_URL ?? env.BETTER_AUTH_URL
+  const appUrl = env.NEXT_PUBLIC_APP_URL ?? env.BETTER_AUTH_URL
   const redirectUrl = new URL("/settings/integrations/github", appUrl)
   if (installationId)
     redirectUrl.searchParams.set("installation_id", installationId)
