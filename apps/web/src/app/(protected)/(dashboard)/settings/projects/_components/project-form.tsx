@@ -100,6 +100,22 @@ export function ProjectForm({ isPending, onSubmit }: Props) {
         }}
       </form.Field>
 
+      <form.Field name="description">
+        {(field) => (
+          <Field>
+            <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+            <Input
+              id={field.name}
+              name={field.name}
+              onBlur={field.handleBlur}
+              onChange={(e) => field.handleChange(e.target.value)}
+              placeholder="Optional description"
+              value={field.state.value}
+            />
+          </Field>
+        )}
+      </form.Field>
+
       <Button disabled={isPending} type="submit">
         {isPending ? "Creating…" : "Create project"}
       </Button>
