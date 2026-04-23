@@ -1,4 +1,5 @@
 import {
+  assignCaptureKeyToProjectProcedure,
   createCaptureKey,
   deleteCaptureKey,
   listCaptureKeys,
@@ -20,4 +21,5 @@ export const captureKeyRouter = {
   updateOrigins: updateCaptureKeyOrigins,
   revoke: revokeCaptureKey,
   rotate: rotateCaptureKey,
+  assignToProject: assignCaptureKeyToProjectProcedure,
 }

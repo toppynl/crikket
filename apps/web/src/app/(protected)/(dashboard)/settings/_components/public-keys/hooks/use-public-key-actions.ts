@@ -69,7 +69,20 @@ export function usePublicKeyActions() {
     },
   })
 
+  const assignToProjectMutation = useMutation({
+    mutationFn: async (input: { keyId: string; projectId: string | null }) =>
+      client.captureKey.assignToProject(input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries()
+      toast.success("Project assigned")
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to assign project")
+    },
+  })
+
   return {
+    assignToProjectMutation,
     createMutation,
     deleteMutation,
     revokeMutation,

@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server"
 import { z } from "zod"
 import {
+  assignCaptureKeyToProject,
   createCapturePublicKey,
   deleteCapturePublicKey,
   listCapturePublicKeys,
@@ -140,5 +141,21 @@ export const rotateCaptureKey = protectedProcedure
     return rotateCapturePublicKey({
       keyId: input.keyId,
       organizationId,
+    })
+  })
+
+export const assignCaptureKeyToProjectProcedure = protectedProcedure
+  .input(
+    z.object({
+      keyId: z.string().min(1),
+      projectId: z.string().nullable(),
+    })
+  )
+  .handler(async ({ context, input }) => {
+    const organizationId = await requireActiveOrgAdmin(context.session)
+    return assignCaptureKeyToProject({
+      keyId: input.keyId,
+      organizationId,
+      projectId: input.projectId,
     })
   })

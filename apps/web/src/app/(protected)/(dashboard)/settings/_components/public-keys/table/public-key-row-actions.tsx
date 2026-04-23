@@ -13,6 +13,7 @@ import {
 import {
   Copy,
   Edit3,
+  FolderOpen,
   MoreVertical,
   RefreshCcw,
   ShieldOff,
@@ -25,10 +26,12 @@ import type { PublicKeyItem } from "../types"
 
 interface PublicKeyRowActionsProps {
   canManage: boolean
+  isAssigningToProject: boolean
   isDeleting: boolean
   isRevoking: boolean
   isRotating: boolean
   item: PublicKeyItem
+  onAssignToProject: (keyId: string) => void
   onDelete: (input: { keyId: string }) => Promise<void>
   onEdit: (item: PublicKeyItem) => void
   onRevoke: (input: { keyId: string }) => Promise<void>
@@ -48,10 +51,12 @@ function buildBundlerSnippet(input: { host: string; key: string }): string {
 
 export function PublicKeyRowActions({
   canManage,
+  isAssigningToProject,
   isDeleting,
   isRevoking,
   isRotating,
   item,
+  onAssignToProject,
   onDelete,
   onEdit,
   onRevoke,
@@ -99,6 +104,13 @@ export function PublicKeyRowActions({
           <DropdownMenuItem onClick={() => onEdit(item)}>
             <Edit3 />
             Edit details
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={isAssigningToProject}
+            onClick={() => onAssignToProject(item.id)}
+          >
+            <FolderOpen />
+            {isAssigningToProject ? "Assigning..." : "Assign to project"}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={isRotating}

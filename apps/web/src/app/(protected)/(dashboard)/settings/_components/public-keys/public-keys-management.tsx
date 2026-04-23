@@ -15,8 +15,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@crikket/ui/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@crikket/ui/components/ui/select"
+import { useQuery } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import * as React from "react"
+
+import { client } from "@/utils/orpc"
 
 import { PublicKeyCreateForm } from "./forms/public-key-create-form"
 import { PublicKeyForm } from "./forms/public-key-form"
@@ -38,8 +48,16 @@ export function PublicKeysManagement({
   const [editingItem, setEditingItem] = React.useState<
     PublicKeysSnapshot[number] | null
   >(null)
+  const [assigningKeyId, setAssigningKeyId] = React.useState<string | null>(
+    null
+  )
+  const [selectedProjectId, setSelectedProjectId] = React.useState<
+    string | null
+  >(null)
+
   const keysQuery = usePublicKeysData(initialKeys)
   const {
+    assignToProjectMutation,
     createMutation,
     deleteMutation,
     revokeMutation,
@@ -47,8 +65,29 @@ export function PublicKeysManagement({
     updateMutation,
   } = usePublicKeyActions()
 
+  const projectsQuery = useQuery({
+    queryKey: ["projects"],
+    queryFn: () => client.project.list(),
+  })
+
   const keys = keysQuery.data ?? []
+  const projects = projectsQuery.data ?? []
   const updatingKeyId = updateMutation.variables?.keyId ?? null
+
+  const assigningKey = assigningKeyId
+    ? keys.find((k) => k.id === assigningKeyId) ?? null
+    : null
+
+  function openAssignDialog(keyId: string) {
+    const key = keys.find((k) => k.id === keyId) ?? null
+    setAssigningKeyId(keyId)
+    setSelectedProjectId(key?.projectId ?? null)
+  }
+
+  function closeAssignDialog() {
+    setAssigningKeyId(null)
+    setSelectedProjectId(null)
+  }
 
   return (
     <div className="space-y-4">
@@ -74,6 +113,11 @@ export function PublicKeysManagement({
         <CardContent>
           {keys.length > 0 ? (
             <PublicKeysTable
+              assigningToProjectKeyId={
+                assignToProjectMutation.isPending
+                  ? (assignToProjectMutation.variables?.keyId ?? null)
+                  : null
+              }
               canManage={canManage}
               deletingKeyId={
                 deleteMutation.isPending
@@ -81,6 +125,7 @@ export function PublicKeysManagement({
                   : null
               }
               items={keys}
+              onAssignToProject={openAssignDialog}
               onDelete={async (input) => {
                 await deleteMutation.mutateAsync(input)
               }}
@@ -169,6 +214,62 @@ export function PublicKeysManagement({
               submittingLabel="Saving..."
             />
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog onOpenChange={(open) => !open && closeAssignDialog()} open={assigningKeyId !== null}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign to project</DialogTitle>
+            <DialogDescription>
+              {assigningKey
+                ? `Select the project for "${assigningKey.label}", or clear to remove the assignment.`
+                : "Select a project to assign this key to."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select
+              onValueChange={(value) =>
+                setSelectedProjectId(value === "__none__" ? null : value)
+              }
+              value={selectedProjectId ?? "__none__"}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="No project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">No project</SelectItem>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={closeAssignDialog}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={assignToProjectMutation.isPending}
+                onClick={async () => {
+                  if (!assigningKeyId) return
+                  await assignToProjectMutation.mutateAsync({
+                    keyId: assigningKeyId,
+                    projectId: selectedProjectId,
+                  })
+                  closeAssignDialog()
+                }}
+                type="button"
+              >
+                {assignToProjectMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
