@@ -284,6 +284,7 @@
         "@octokit/app": "catalog:",
         "@orpc/server": "catalog:",
         "drizzle-orm": "catalog:",
+        "nanoid": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
