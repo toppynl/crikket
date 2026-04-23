@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/server"
 import { z } from "zod"
 import { configureGitHubIntegration } from "../service/configure"
 import { protectedProcedure } from "./context"
+import { requireActiveOrgAdmin } from "./helpers"
 
 export const configure = protectedProcedure
   .input(
@@ -11,10 +12,7 @@ export const configure = protectedProcedure
     })
   )
   .handler(async ({ context, input }) => {
-    const organizationId = context.session.session.activeOrganizationId
-    if (!organizationId) {
-      throw new ORPCError("UNAUTHORIZED", { message: "No active organization" })
-    }
+    const organizationId = await requireActiveOrgAdmin(context.session)
 
     try {
       await configureGitHubIntegration(
@@ -24,7 +22,10 @@ export const configure = protectedProcedure
       )
     } catch (error) {
       throw new ORPCError("BAD_REQUEST", {
-        message: error instanceof Error ? error.message : "Failed to configure GitHub integration",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to configure GitHub integration",
       })
     }
   })

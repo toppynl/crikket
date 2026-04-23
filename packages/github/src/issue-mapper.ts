@@ -20,12 +20,20 @@ export type BugReportForIssue = {
 export function mapBugReportToIssue(
   report: BugReportForIssue,
   crikketAppUrl: string
-): { title: string; body: string; labels: string[]; labelColors: Record<string, string> } {
-  const title = report.title ?? `Bug report from ${report.url ?? "unknown page"}`
+): {
+  title: string
+  body: string
+  labels: string[]
+  labelColors: Record<string, string>
+} {
+  const title =
+    report.title ?? `Bug report from ${report.url ?? "unknown page"}`
 
   const deviceInfo = report.deviceInfo as Record<string, unknown> | null
   const deviceSection = deviceInfo
-    ? `## Device Info\n\n| Field | Value |\n|---|---|\n${Object.entries(deviceInfo)
+    ? `## Device Info\n\n| Field | Value |\n|---|---|\n${Object.entries(
+        deviceInfo
+      )
         .filter(([, v]) => v !== null && v !== undefined)
         .map(([k, v]) => `| ${k} | ${String(v)} |`)
         .join("\n")}`
@@ -65,11 +73,14 @@ export async function ensureLabelsExist(
   labels: string[],
   labelColors: Record<string, string>
 ): Promise<void> {
-  const { data: existing } = await octokit.request("GET /repos/{owner}/{repo}/labels", {
-    owner,
-    repo,
-    per_page: 100,
-  })
+  const { data: existing } = await octokit.request(
+    "GET /repos/{owner}/{repo}/labels",
+    {
+      owner,
+      repo,
+      per_page: 100,
+    }
+  )
   const existingNames = new Set(existing.map((l: { name: string }) => l.name))
 
   for (const label of labels) {

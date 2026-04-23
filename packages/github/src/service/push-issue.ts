@@ -20,7 +20,12 @@ export async function pushBugReportToGitHub(
   const [existing] = await db
     .select()
     .from(githubIssueLink)
-    .where(eq(githubIssueLink.bugReportId, bugReportId))
+    .where(
+      and(
+        eq(githubIssueLink.bugReportId, bugReportId),
+        eq(githubIssueLink.organizationId, organizationId)
+      )
+    )
     .limit(1)
 
   if (existing) {

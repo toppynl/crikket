@@ -8,7 +8,9 @@ type IssuesPayload = {
   repository: { name: string; owner: { login: string } }
 }
 
-export async function processIssuesClosed(payload: IssuesPayload): Promise<void> {
+export async function processIssuesClosed(
+  payload: IssuesPayload
+): Promise<void> {
   const owner = payload.repository.owner.login
   const repo = payload.repository.name
   const issueNumber = payload.issue.number
@@ -31,9 +33,6 @@ export async function processIssuesClosed(payload: IssuesPayload): Promise<void>
     .update(bugReport)
     .set({ status: "resolved", updatedAt: new Date() })
     .where(
-      and(
-        eq(bugReport.id, link.bugReportId),
-        eq(bugReport.status, "open")
-      )
+      and(eq(bugReport.id, link.bugReportId), eq(bugReport.status, "open"))
     )
 }

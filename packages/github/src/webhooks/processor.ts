@@ -1,15 +1,26 @@
 import { db } from "@crikket/db"
 import { githubWebhookEvent } from "@crikket/db/schema/github"
-import { eq } from "drizzle-orm"
+import { and, asc, eq, lt, or } from "drizzle-orm"
 import { processIssuesClosed } from "./processors/issues-closed"
 import { processIssuesReopened } from "./processors/issues-reopened"
 
 async function claimNextEvent() {
+  const stuckBefore = new Date(Date.now() - 5 * 60 * 1000)
+
   return db.transaction(async (tx) => {
     const [event] = await tx
       .select()
       .from(githubWebhookEvent)
-      .where(eq(githubWebhookEvent.status, "received"))
+      .where(
+        or(
+          eq(githubWebhookEvent.status, "received"),
+          and(
+            eq(githubWebhookEvent.status, "processing"),
+            lt(githubWebhookEvent.updatedAt, stuckBefore)
+          )
+        )
+      )
+      .orderBy(asc(githubWebhookEvent.receivedAt))
       .limit(1)
       .for("update", { skipLocked: true })
 
@@ -33,7 +44,7 @@ export async function runGitHubWebhookProcessorPass(
 
     try {
       const payload = event.payload as Record<string, unknown>
-      const action = (payload.action) as string | undefined
+      const action = payload.action as string | undefined
 
       const handled =
         event.eventType === "issues" &&
@@ -41,15 +52,22 @@ export async function runGitHubWebhookProcessorPass(
 
       if (event.eventType === "issues") {
         if (action === "closed") {
-          await processIssuesClosed(payload as Parameters<typeof processIssuesClosed>[0])
+          await processIssuesClosed(
+            payload as Parameters<typeof processIssuesClosed>[0]
+          )
         } else if (action === "reopened") {
-          await processIssuesReopened(payload as Parameters<typeof processIssuesReopened>[0])
+          await processIssuesReopened(
+            payload as Parameters<typeof processIssuesReopened>[0]
+          )
         }
       }
 
       await db
         .update(githubWebhookEvent)
-        .set({ status: handled ? "processed" : "ignored", processedAt: new Date() })
+        .set({
+          status: handled ? "processed" : "ignored",
+          processedAt: new Date(),
+        })
         .where(eq(githubWebhookEvent.id, event.id))
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)

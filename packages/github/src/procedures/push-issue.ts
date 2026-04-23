@@ -17,7 +17,8 @@ export const pushIssue = protectedProcedure
       const message = error instanceof Error ? error.message : "Unknown error"
       if (message.includes("not configured")) {
         throw new ORPCError("BAD_REQUEST", {
-          message: "GitHub integration not configured. Go to Settings → Integrations → GitHub.",
+          message:
+            "GitHub integration not configured. Go to Settings → Integrations → GitHub.",
         })
       }
       throw new ORPCError("INTERNAL_SERVER_ERROR", { message })

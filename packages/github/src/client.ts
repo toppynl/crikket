@@ -1,16 +1,20 @@
-import { App } from "@octokit/app"
 import { env } from "@crikket/env/server"
+import { App } from "@octokit/app"
 
 let _app: App | null = null
 
 function getApp(): App {
   if (_app) return _app
-  if (!env.GITHUB_APP_ID || !env.GITHUB_APP_PRIVATE_KEY) {
-    throw new Error("GitHub App not configured (missing GITHUB_APP_ID or GITHUB_APP_PRIVATE_KEY)")
+  if (!(env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY)) {
+    throw new Error(
+      "GitHub App not configured (missing GITHUB_APP_ID or GITHUB_APP_PRIVATE_KEY)"
+    )
   }
   _app = new App({
     appId: env.GITHUB_APP_ID,
-    privateKey: Buffer.from(env.GITHUB_APP_PRIVATE_KEY, "base64").toString("utf8"),
+    privateKey: Buffer.from(env.GITHUB_APP_PRIVATE_KEY, "base64").toString(
+      "utf8"
+    ),
   })
   return _app
 }
