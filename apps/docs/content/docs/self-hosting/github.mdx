@@ -1,0 +1,119 @@
+---
+title: GitHub Issues Integration
+description: Push Crikket bug reports to GitHub Issues with full context, and sync issue status back automatically.
+---
+
+Crikket's GitHub integration lets your team push bug reports to GitHub Issues directly from the dashboard. Each issue includes the full report context — description, device info, reproduction steps, console logs, and network requests — plus presigned links to the screenshot or recording and the debugger payload.
+
+Closing or reopening a GitHub issue syncs the status back to the corresponding Crikket report automatically via webhooks.
+
+The integration is configured **per organization** by an admin. All members of the organization share a single GitHub App installation.
+
+---
+
+## Prerequisites
+
+- A GitHub repository you control (public or private).
+- The Crikket GitHub App installed on that repository.
+- A running Crikket server with the environment variables below configured.
+
+---
+
+## Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `GITHUB_APP_ID` | Yes | Numeric GitHub App ID |
+| `GITHUB_APP_PRIVATE_KEY` | Yes | PEM private key, **base64-encoded** |
+| `GITHUB_WEBHOOK_SECRET` | Yes | Secret configured on the GitHub App's webhook |
+| `NEXT_PUBLIC_GITHUB_APP_SLUG` | Yes | GitHub App slug (used to build the install URL in the UI) |
+| `APP_URL` | Yes | Public URL of your Crikket instance — used as the OAuth callback base |
+| `GITHUB_ISSUE_ARTIFACT_URL_TTL_SECONDS` | No | Presigned URL TTL for artifacts in issue bodies. Defaults to `31536000` (1 year). Set to `0` to use `STORAGE_PUBLIC_URL` permanently. |
+
+---
+
+## Configure
+
+1. Sign in as an organization admin and open **Settings → Integrations → GitHub**.
+2. Click **Install GitHub App** — this opens GitHub's App installation flow.
+3. After installing, GitHub redirects back with an `installation_id` query parameter.
+4. Enter the target repository name (e.g. `my-repo`) and click **Save**.
+
+The integration is now active. Admins can adjust settings at any time from the same page.
+
+---
+
+## Pushing a report
+
+1. Open any bug report and click the **⋮** (actions) dropdown on the report card.
+2. Select **Push to GitHub**.
+3. Crikket creates a GitHub issue in the configured repository and the button changes to **View on GitHub ↗**.
+
+Pushing the same report twice is idempotent — Crikket detects the existing link and returns the original issue URL without creating a duplicate.
+
+---
+
+## Issue contents
+
+Each created issue includes:
+
+- **Header** — report ID, creation timestamp, and a deep-link back to the Crikket dashboard.
+- **Description** — the submitter's description text.
+- **Context table** — URL, browser, OS, viewport, priority, tags, attachment type, duration, SDK version.
+- **Artifacts** — presigned links to the capture (screenshot `.png` or recording `.webm`) and the debugger payload (`.json`).
+- **Reproduction steps** — numbered action events from the session.
+- **Console logs** — up to 50 most recent entries in a code block.
+- **Network requests** — up to 50 requests in a collapsed table (method, status, duration, URL).
+
+Labels are created automatically: `priority: critical/high/medium/low` (when priority is set), plus any tags on the report.
+
+---
+
+## Artifact links
+
+Artifact links use presigned S3 URLs. By default they are valid for **1 year** from issue creation.
+
+- If `STORAGE_PUBLIC_URL` is configured (public bucket), links are permanent static URLs with no expiry.
+- To change the TTL, set `GITHUB_ISSUE_ARTIFACT_URL_TTL_SECONDS`. Existing issues are unaffected — only future pushes use the new TTL.
+
+---
+
+## Auto-sync
+
+Enable **Auto-sync new reports** in **Settings → Integrations → GitHub** to automatically push every new bug report to GitHub Issues without manual action. The push happens within 30 seconds of report submission.
+
+Manual push is always available regardless of the auto-sync setting, and pushing a report that was already auto-synced returns the existing issue URL.
+
+---
+
+## Webhook status sync
+
+Crikket listens for GitHub webhooks on `POST /api/webhooks/github` (HMAC-SHA256 verified using `GITHUB_WEBHOOK_SECRET`):
+
+| GitHub event | Crikket effect |
+|---|---|
+| `issues.closed` | Bug report status → `resolved` |
+| `issues.reopened` | Bug report status → `open` |
+
+Webhook events are stored idempotently — duplicate deliveries (same `x-github-delivery` ID) are silently ignored.
+
+---
+
+## Removing the integration
+
+Open **Settings → Integrations → GitHub** and click **Disconnect**. This removes the installation config immediately. Previously pushed issues and their GitHub history are unaffected.
+
+---
+
+## Troubleshooting
+
+**"Push to GitHub" button shows no response.** Check the server logs for `[github-auto-sync]` or procedure errors. Common causes:
+
+- `GITHUB_APP_ID` or `GITHUB_APP_PRIVATE_KEY` misconfigured — verify the App ID matches and the key is correctly base64-encoded.
+- Installation ID mismatch — re-install the GitHub App from the settings page.
+
+**Issue was created but has no artifact links.** Storage may not be configured or the bucket is inaccessible. Verify `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY_ID`, and `STORAGE_SECRET_ACCESS_KEY` are set and the server can reach the storage endpoint.
+
+**Artifact link returns an error or expired URL.** Presigned URLs expire after the configured TTL. Configure `STORAGE_PUBLIC_URL` (public bucket) or increase `GITHUB_ISSUE_ARTIFACT_URL_TTL_SECONDS` for longer-lived links.
+
+**Webhook events are received but status doesn't update.** Confirm `GITHUB_WEBHOOK_SECRET` matches the secret set on the GitHub App. Check the server logs for `[github-webhook-processor]` entries.

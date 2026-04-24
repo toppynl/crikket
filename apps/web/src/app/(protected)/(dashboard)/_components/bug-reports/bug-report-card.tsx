@@ -27,6 +27,7 @@ import {
   Copy,
   Edit3,
   ExternalLink,
+  Github,
   ImageIcon,
   MoreVertical,
   Play,
@@ -46,6 +47,7 @@ import {
 } from "react"
 import { toast } from "sonner"
 import { EditBugReportSheet } from "@/components/bug-reports/edit-bug-report-sheet"
+import { client } from "@/utils/orpc"
 
 import {
   formatPriorityLabel,
@@ -83,6 +85,27 @@ export function BugReportCard({
       BUG_REPORT_DEBUGGER_INGESTION_STATUS_OPTIONS.failed &&
     report.submissionStatus === BUG_REPORT_SUBMISSION_STATUS_OPTIONS.failed
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false)
+  const [githubIssueUrl, setGithubIssueUrl] = useState<string | null>(
+    report.githubIssueUrl ?? null
+  )
+  const [isPushing, setIsPushing] = useState(false)
+
+  async function handlePushToGitHub() {
+    setIsPushing(true)
+    try {
+      const result = await client.github.pushIssue({ bugReportId: report.id })
+      setGithubIssueUrl(result.issueUrl)
+      toast.success(
+        result.alreadyPushed ? "Already on GitHub" : "Pushed to GitHub"
+      )
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to push to GitHub"
+      )
+    } finally {
+      setIsPushing(false)
+    }
+  }
 
   const handleCopyLink = async () => {
     if (!isReady) {
@@ -188,6 +211,29 @@ export function BugReportCard({
                   <Edit3 className="size-4" />
                   Edit report
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {githubIssueUrl ? (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      window.open(
+                        githubIssueUrl,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    <Github className="size-4" />
+                    View on GitHub
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    disabled={isPushing}
+                    onClick={handlePushToGitHub}
+                  >
+                    <Github className="size-4" />
+                    {isPushing ? "Pushing…" : "Push to GitHub"}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={onRequestDelete}

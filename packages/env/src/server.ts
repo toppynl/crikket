@@ -58,6 +58,15 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "production", "staging"])
       .default("development"),
+    GITHUB_APP_ID: z.string().min(1).optional(),
+    GITHUB_APP_PRIVATE_KEY: z.string().min(1).optional(),
+    GITHUB_WEBHOOK_SECRET: z.string().min(1).optional(),
+    GITHUB_ISSUE_ARTIFACT_URL_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .optional(),
+    NEXT_PUBLIC_APP_URL: z.url().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

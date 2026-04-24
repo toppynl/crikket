@@ -1,0 +1,1 @@
+ALTER TABLE "github_integration" ADD COLUMN "auto_sync" boolean DEFAULT false NOT NULL;

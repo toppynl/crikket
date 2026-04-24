@@ -1,0 +1,30 @@
+{
+  "name": "@crikket/github",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test test"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/s3-request-presigner": "catalog:",
+    "@crikket/db": "workspace:*",
+    "@crikket/env": "workspace:*",
+    "@crikket/shared": "workspace:*",
+    "@octokit/app": "catalog:",
+    "@orpc/server": "catalog:",
+    "drizzle-orm": "catalog:",
+    "nanoid": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@crikket/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
