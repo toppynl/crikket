@@ -12,12 +12,19 @@
     {
       "idx": 1,
       "version": "7",
+      "when": 1776941264000,
+      "tag": "0001_groovy_madame_web",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
       "when": 1776945697823,
       "tag": "0001_supreme_lilandra",
       "breakpoints": true
     },
     {
-      "idx": 2,
+      "idx": 3,
       "version": "7",
       "when": 1776948670488,
       "tag": "0002_fat_forgotten_one",
