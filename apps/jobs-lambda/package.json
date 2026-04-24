@@ -1,0 +1,19 @@
+{
+  "name": "jobs-lambda",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "check-types": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@crikket/jobs": "workspace:*"
+  },
+  "devDependencies": {
+    "@crikket/config": "workspace:*",
+    "@types/aws-lambda": "^8.10.149",
+    "tsdown": "^0.16.5",
+    "typescript": "catalog:"
+  }
+}
