@@ -1,4 +1,5 @@
 import { initDb } from "@crikket/db"
+import { initServerEnv } from "@crikket/env/server"
 import {
   runArtifactCleanupPass,
   runBugReportIngestionPass,
@@ -16,6 +17,7 @@ export default {
     env: Env,
     _ctx: ExecutionContext
   ): Promise<void> {
+    initServerEnv(env)
     initDb(env.DB.connectionString)
 
     switch (controller.cron) {
