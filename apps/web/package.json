@@ -6,7 +6,8 @@
     "dev": "next dev --port 3001",
     "check-types": "tsc --noEmit -p tsconfig.json",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "build:cf": "next build && npx @cloudflare/next-on-pages"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
@@ -35,6 +36,7 @@
     "nextjs-toploader": "catalog:"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@crikket/config": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
