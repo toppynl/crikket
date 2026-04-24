@@ -162,7 +162,9 @@ app.get("/api/github/callback", (c) => {
   return c.redirect(redirectUrl.toString())
 })
 
-if (env.BACKGROUND_JOBS === "native") {
+function startBackgroundJobs() {
+  if (env.BACKGROUND_JOBS !== "native") return
+
   const cleanupInterval = setInterval(() => {
     runArtifactCleanupPass({ limit: 50 }).catch((error: unknown) => {
       console.error("[artifact-cleanup] failed scheduled cleanup pass", error)
@@ -210,6 +212,12 @@ if (env.BACKGROUND_JOBS === "native") {
   }, GITHUB_AUTO_SYNC_INTERVAL_MS)
 
   githubAutoSyncInterval.unref?.()
+}
+
+// Only start background jobs when this file is the Bun/Node entry point,
+// not when imported by the Cloudflare Worker entry (worker.ts).
+if (import.meta.main) {
+  startBackgroundJobs()
 }
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
