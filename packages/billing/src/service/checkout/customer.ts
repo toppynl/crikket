@@ -3,7 +3,7 @@ import { user } from "@crikket/db/schema/auth"
 import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import { ORPCError } from "@orpc/server"
 import { eq } from "drizzle-orm"
-import { polarClient } from "../../lib/payments"
+import { getPolarClient } from "../../lib/payments"
 import { findPaginatedPolarItems } from "../polar-pagination"
 import { isPolarResourceNotFoundError } from "../utils"
 import { isPolarCustomerEmailAlreadyExistsError } from "./shared"
@@ -15,7 +15,7 @@ async function findPolarCustomerByEmail(
   const normalizedEmail = email.toLowerCase()
   const { exactMatch, firstItem } = await findPaginatedPolarItems({
     fetchPage: (page, limit) =>
-      polarClient.customers.list({
+      getPolarClient().customers.list({
         email,
         limit,
         page,
@@ -60,7 +60,7 @@ async function getOrCreatePolarCustomerForUser(input: {
   userName: string | null
 }): Promise<PolarCustomer> {
   try {
-    return await polarClient.customers.getExternal({
+    return await getPolarClient().customers.getExternal({
       externalId: input.userId,
     })
   } catch (error) {
@@ -70,7 +70,7 @@ async function getOrCreatePolarCustomerForUser(input: {
   }
 
   try {
-    return await polarClient.customers.create({
+    return await getPolarClient().customers.create({
       externalId: input.userId,
       email: input.userEmail,
       name: input.userName,
@@ -102,7 +102,7 @@ async function syncPolarCustomerProfile(input: {
   }
 
   try {
-    return await polarClient.customers.update({
+    return await getPolarClient().customers.update({
       id: input.customer.id,
       customerUpdate: {
         email: input.userEmail,

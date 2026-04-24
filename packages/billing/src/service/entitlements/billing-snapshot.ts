@@ -5,7 +5,7 @@ import { env } from "@crikket/env/server"
 import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import { count, eq } from "drizzle-orm"
 
-import { polarClient } from "../../lib/payments"
+import { getPolarClient } from "../../lib/payments"
 import {
   ACTIVE_PAID_SUBSCRIPTION_STATUSES,
   BILLING_PLAN,
@@ -34,7 +34,7 @@ type RecoverableBillingSnapshotRow = BillingSnapshotRow & {
 }
 
 type PolarSubscription = Awaited<
-  ReturnType<typeof polarClient.subscriptions.get>
+  ReturnType<ReturnType<typeof getPolarClient>["subscriptions"]["get"]>
 >
 
 function isActivePaidSubscriptionStatus(status: unknown): boolean {
@@ -119,7 +119,7 @@ async function recoverBillingSnapshotFromSubscription(input: {
   entitlements: EntitlementSnapshot
 } | null> {
   try {
-    const subscription = await polarClient.subscriptions.get({
+    const subscription = await getPolarClient().subscriptions.get({
       id: input.billingRow.polarSubscriptionId,
     })
     const recoveredPlan =
@@ -194,7 +194,7 @@ async function recoverBillingSnapshotFromMetadata(input: {
   try {
     const subscriptions = await collectPaginatedPolarItems({
       fetchPage: (page, limit) =>
-        polarClient.subscriptions.list({
+        getPolarClient().subscriptions.list({
           active: true,
           limit,
           metadata: { referenceId: input.organizationId },

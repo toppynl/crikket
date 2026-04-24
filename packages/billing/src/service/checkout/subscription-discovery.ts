@@ -1,4 +1,4 @@
-import { polarClient } from "../../lib/payments"
+import { getPolarClient } from "../../lib/payments"
 import { BILLING_SUBSCRIPTION_STATUS } from "../../model"
 import { collectPaginatedPolarItems } from "../polar-pagination"
 import { isPolarResourceNotFoundError } from "../utils"
@@ -87,7 +87,7 @@ async function findCandidateSubscriptionById(input: {
   }
 
   try {
-    const subscription = await polarClient.subscriptions.get({
+    const subscription = await getPolarClient().subscriptions.get({
       id: candidateSubscriptionId,
     })
     if (!isUpdatableSubscriptionStatus(subscription.status)) {
@@ -117,7 +117,7 @@ async function listUpdatableSubscriptionsByFilters(
   for (const listFilter of listFilters) {
     const subscriptions = await collectPaginatedPolarItems({
       fetchPage: (page, limit) =>
-        polarClient.subscriptions.list({
+        getPolarClient().subscriptions.list({
           ...listFilter,
           limit,
           page,

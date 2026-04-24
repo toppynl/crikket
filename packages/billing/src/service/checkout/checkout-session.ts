@@ -1,6 +1,6 @@
 import { env } from "@crikket/env/server"
 import { ORPCError } from "@orpc/server"
-import { polarClient } from "../../lib/payments"
+import { getPolarClient } from "../../lib/payments"
 import { assertUserCanManageOrganizationBilling } from "../access"
 import { getErrorMessage } from "../utils"
 import { resolvePolarCustomerForUser } from "./customer"
@@ -37,7 +37,7 @@ export async function createOrganizationCheckoutSession(input: {
       input.userId
     )
 
-    const checkout = await polarClient.checkouts.create({
+    const checkout = await getPolarClient().checkouts.create({
       customerEmail: userEmail,
       customerId: customer.id,
       customerName: userName.length > 0 ? userName : null,

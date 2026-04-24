@@ -1,6 +1,6 @@
 import { reportNonFatalError } from "@crikket/shared/lib/errors"
 
-import { polarClient } from "../../lib/payments"
+import { getPolarClient } from "../../lib/payments"
 import {
   type BillingPlan,
   type BillingSubscriptionStatus,
@@ -66,7 +66,7 @@ export async function hydrateBillingProjectionFromSubscription(input: {
   }
 
   try {
-    const subscription = await polarClient.subscriptions.get({
+    const subscription = await getPolarClient().subscriptions.get({
       id: subscriptionId,
     })
 

@@ -1,4 +1,4 @@
-import type { polarClient } from "../../lib/payments"
+import type { getPolarClient } from "../../lib/payments"
 import {
   ACTIVE_PAID_SUBSCRIPTION_STATUSES,
   BILLING_SUBSCRIPTION_STATUS,
@@ -18,11 +18,11 @@ export type OrganizationBillingAccountSnapshot = {
 }
 
 export type PolarSubscription = Awaited<
-  ReturnType<typeof polarClient.subscriptions.get>
+  ReturnType<ReturnType<typeof getPolarClient>["subscriptions"]["get"]>
 >
 
 export type PolarCustomer = Awaited<
-  ReturnType<typeof polarClient.customers.getExternal>
+  ReturnType<ReturnType<typeof getPolarClient>["customers"]["getExternal"]>
 >
 
 export type BillingUserProfile = {

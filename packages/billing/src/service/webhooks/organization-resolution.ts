@@ -2,7 +2,7 @@ import { db } from "@crikket/db"
 import { organizationBillingAccount } from "@crikket/db/schema/billing"
 import { eq } from "drizzle-orm"
 
-import { polarClient } from "../../lib/payments"
+import { getPolarClient } from "../../lib/payments"
 import {
   extractCheckoutId,
   extractCustomerId,
@@ -42,7 +42,7 @@ async function resolveOrganizationIdFromSubscriptionPayload(
   }
 
   try {
-    const subscription = await polarClient.subscriptions.get({
+    const subscription = await getPolarClient().subscriptions.get({
       id: subscriptionId,
     })
     const subscriptionReferenceId =
@@ -78,7 +78,7 @@ async function resolveOrganizationIdFromCheckoutPayload(
   }
 
   try {
-    const checkout = await polarClient.checkouts.get({
+    const checkout = await getPolarClient().checkouts.get({
       id: checkoutId,
     })
     const checkoutReferenceId =
