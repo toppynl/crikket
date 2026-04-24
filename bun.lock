@@ -104,6 +104,7 @@
         "@crikket/bug-reports": "workspace:*",
         "@crikket/db": "workspace:*",
         "@crikket/env": "workspace:*",
+        "@crikket/github": "workspace:*",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
@@ -115,6 +116,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@cloudflare/workers-types": "^4.20260424.1",
         "@crikket/config": "workspace:*",
         "@types/bun": "catalog:",
         "tsdown": "^0.16.5",
