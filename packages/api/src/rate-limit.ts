@@ -1,9 +1,8 @@
-import { createHash } from "node:crypto"
-import { isIP } from "node:net"
 import { env } from "@crikket/env/server"
 import { ORPCError } from "@orpc/client"
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
+import isIp from "is-ip"
 
 const RPC_ROUTE_PREFIX = "/rpc/"
 const CLIENT_ID_FALLBACK = "anonymous"
@@ -119,7 +118,7 @@ function normalizeIpCandidate(value: string): string | null {
     candidate = candidate.slice(0, candidate.lastIndexOf(":"))
   }
 
-  return isIP(candidate) ? candidate : null
+  return isIp(candidate) ? candidate : null
 }
 
 function getClientIp(request: Request): string | null {
@@ -144,7 +143,7 @@ function getClientIp(request: Request): string | null {
   return null
 }
 
-function getFallbackFingerprint(request: Request): string {
+async function getFallbackFingerprint(request: Request): Promise<string> {
   const source = [
     request.headers.get("user-agent")?.trim() ?? "",
     request.headers.get("accept-language")?.trim() ?? "",
@@ -156,16 +155,21 @@ function getFallbackFingerprint(request: Request): string {
     return CLIENT_ID_FALLBACK
   }
 
-  return createHash("sha256").update(source).digest("hex").slice(0, 16)
+  const encoded = new TextEncoder().encode(source)
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded)
+  const hashHex = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+  return hashHex.slice(0, 16)
 }
 
-function getIpIdentifier(request: Request): string {
+async function getIpIdentifier(request: Request): Promise<string> {
   const ip = getClientIp(request)
   if (ip) {
     return ip
   }
 
-  return `fp:${getFallbackFingerprint(request)}`
+  return `fp:${await getFallbackFingerprint(request)}`
 }
 
 function getRateLimitHeaders(limit: number, remaining: number, reset: number) {
@@ -304,7 +308,7 @@ export async function evaluateRpcRateLimit(
       limiters.ip,
       getRateLimitKey({
         scope: "ip",
-        identifier: getIpIdentifier(request),
+        identifier: await getIpIdentifier(request),
       })
     )
 

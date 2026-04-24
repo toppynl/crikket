@@ -162,35 +162,39 @@ app.get("/api/github/callback", (c) => {
   return c.redirect(redirectUrl.toString())
 })
 
-const cleanupInterval = setInterval(() => {
-  runArtifactCleanupPass({ limit: 50 }).catch((error: unknown) => {
-    console.error("[artifact-cleanup] failed scheduled cleanup pass", error)
-  })
-}, STORAGE_CLEANUP_INTERVAL_MS)
+if (env.BACKGROUND_JOBS === "native") {
+  const cleanupInterval = setInterval(() => {
+    runArtifactCleanupPass({ limit: 50 }).catch((error: unknown) => {
+      console.error("[artifact-cleanup] failed scheduled cleanup pass", error)
+    })
+  }, STORAGE_CLEANUP_INTERVAL_MS)
 
-cleanupInterval.unref?.()
+  cleanupInterval.unref?.()
 
-const ingestionInterval = setInterval(() => {
-  runBugReportIngestionPass({ limit: 10 }).catch((error: unknown) => {
-    console.error(
-      "[bug-report-ingestion] failed scheduled ingestion pass",
-      error
+  const ingestionInterval = setInterval(() => {
+    runBugReportIngestionPass({ limit: 10 }).catch((error: unknown) => {
+      console.error(
+        "[bug-report-ingestion] failed scheduled ingestion pass",
+        error
+      )
+    })
+  }, BUG_REPORT_INGESTION_INTERVAL_MS)
+
+  ingestionInterval.unref?.()
+
+  const orphanCleanupInterval = setInterval(() => {
+    runStalePendingBugReportCleanupPass({ limit: 10 }).catch(
+      (error: unknown) => {
+        console.error(
+          "[bug-report-orphan-cleanup] failed scheduled orphan cleanup pass",
+          error
+        )
+      }
     )
-  })
-}, BUG_REPORT_INGESTION_INTERVAL_MS)
+  }, BUG_REPORT_ORPHAN_CLEANUP_INTERVAL_MS)
 
-ingestionInterval.unref?.()
-
-const orphanCleanupInterval = setInterval(() => {
-  runStalePendingBugReportCleanupPass({ limit: 10 }).catch((error: unknown) => {
-    console.error(
-      "[bug-report-orphan-cleanup] failed scheduled orphan cleanup pass",
-      error
-    )
-  })
-}, BUG_REPORT_ORPHAN_CLEANUP_INTERVAL_MS)
-
-orphanCleanupInterval.unref?.()
+  orphanCleanupInterval.unref?.()
+}
 
 const githubWebhookProcessorInterval = setInterval(() => {
   runGitHubWebhookProcessorPass({ limit: 20 }).catch((error) => {

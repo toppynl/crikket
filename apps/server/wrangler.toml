@@ -1,0 +1,18 @@
+name = "crikket-server"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[hyperdrive]]
+binding = "DB"
+id = ""  # Set to your Hyperdrive config ID from the Cloudflare dashboard
+
+# Background jobs are handled by apps/worker when deploying to Workers
+[vars]
+BACKGROUND_JOBS = "disabled"
+NODE_ENV = "production"
+# All other env vars must be set as secrets:
+#   wrangler secret put BETTER_AUTH_SECRET
+#   wrangler secret put DATABASE_URL  (only needed if not using Hyperdrive for all access)
+#   wrangler secret put STORAGE_SECRET_ACCESS_KEY
+#   etc.

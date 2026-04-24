@@ -161,7 +161,7 @@ export async function processPolarWebhookPayload(
     (typeof payload.type === "string" && payload.type.length > 0
       ? payload.type
       : "unknown") ?? "unknown"
-  const providerEventId = extractProviderEventId(payload, eventType)
+  const providerEventId = await extractProviderEventId(payload, eventType)
   const claimResult = await claimWebhookEventForProcessing({
     eventType,
     payload,

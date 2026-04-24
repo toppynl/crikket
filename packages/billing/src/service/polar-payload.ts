@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto"
 import { env } from "@crikket/env/server"
 
 import {
@@ -277,10 +276,10 @@ export function extractWebhookOccurredAt(
   return toDateOrUndefined(value)
 }
 
-export function extractProviderEventId(
+export async function extractProviderEventId(
   payload: PolarWebhookPayload,
   eventType: string
-): string {
+): Promise<string> {
   const eventId =
     getNestedString(payload, ["id"]) ??
     getNestedString(payload, ["data", "eventId"]) ??
@@ -298,13 +297,13 @@ export function extractProviderEventId(
     getNestedString(payload, ["data", "checkout_id"]) ??
     "unknown"
   const serializedPayload = serializeStablePayloadForHash(payload)
-  const payloadFingerprint = createHash("sha256")
-    .update(eventType)
-    .update(":")
-    .update(secondaryId)
-    .update(":")
-    .update(serializedPayload)
-    .digest("hex")
+  const encoded = new TextEncoder().encode(
+    `${eventType}:${secondaryId}:${serializedPayload}`
+  )
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded)
+  const payloadFingerprint = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
     .slice(0, 32)
 
   return `polar:fallback:${eventType}:${secondaryId}:${payloadFingerprint}`

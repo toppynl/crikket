@@ -19,15 +19,12 @@
     "check-types": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@crikket/env": "workspace:*",
-    "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
-    "pg": "^8.17.1",
-    "zod": "catalog:"
+    "postgres": "^3.4.5"
   },
   "devDependencies": {
     "@crikket/config": "workspace:*",
-    "@types/pg": "catalog:",
+    "dotenv": "catalog:",
     "drizzle-kit": "^0.31.8",
     "typescript": "catalog:"
   }
