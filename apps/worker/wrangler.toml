@@ -1,0 +1,16 @@
+name = "crikket-worker"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[hyperdrive]]
+binding = "DB"
+id = ""  # Set to your Hyperdrive config ID from the Cloudflare dashboard
+
+[triggers]
+crons = ["*/5 * * * *", "* * * * *", "0 * * * *"]
+
+# Development defaults — set secrets via `wrangler secret put <KEY>` for production
+[vars]
+NODE_ENV = "production"
+# Add STORAGE_BUCKET, STORAGE_REGION, STORAGE_ACCESS_KEY_ID, etc.
