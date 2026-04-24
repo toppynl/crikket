@@ -165,12 +165,14 @@ if (env.BACKGROUND_JOBS === "native") {
   ingestionInterval.unref?.()
 
   const orphanCleanupInterval = setInterval(() => {
-    runStalePendingBugReportCleanupPass({ limit: 10 }).catch((error: unknown) => {
-      console.error(
-        "[bug-report-orphan-cleanup] failed scheduled orphan cleanup pass",
-        error
-      )
-    })
+    runStalePendingBugReportCleanupPass({ limit: 10 }).catch(
+      (error: unknown) => {
+        console.error(
+          "[bug-report-orphan-cleanup] failed scheduled orphan cleanup pass",
+          error
+        )
+      }
+    )
   }, BUG_REPORT_ORPHAN_CLEANUP_INTERVAL_MS)
 
   orphanCleanupInterval.unref?.()

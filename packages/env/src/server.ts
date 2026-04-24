@@ -62,7 +62,9 @@ const serverSchema = {
 
 // For Cloudflare Workers: call createServerEnv(workerEnvBindings) instead of
 // using the env singleton, since Workers does not populate process.env from bindings.
-export function createServerEnv(runtimeEnv: Record<string, string | undefined>) {
+export function createServerEnv(
+  runtimeEnv: Record<string, string | undefined>
+) {
   return createEnv({
     server: serverSchema,
     runtimeEnv,
