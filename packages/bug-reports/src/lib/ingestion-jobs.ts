@@ -1,4 +1,3 @@
-import { gunzipSync } from "node:zlib"
 import { db } from "@crikket/db"
 import { bugReport, bugReportIngestionJob } from "@crikket/db/schema/bug-report"
 import {
@@ -355,6 +354,31 @@ async function claimBugReportIngestionJob(
   }
 }
 
+async function decompressGzip(input: Uint8Array): Promise<Uint8Array> {
+  const ds = new DecompressionStream("gzip")
+  const writer = ds.writable.getWriter()
+  const reader = ds.readable.getReader()
+
+  writer.write(input as Uint8Array<ArrayBuffer>)
+  await writer.close()
+
+  const chunks: Uint8Array[] = []
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    chunks.push(value)
+  }
+
+  const totalLength = chunks.reduce((sum, c) => sum + c.length, 0)
+  const result = new Uint8Array(totalLength)
+  let offset = 0
+  for (const chunk of chunks) {
+    result.set(chunk, offset)
+    offset += chunk.length
+  }
+  return result
+}
+
 async function ingestDebuggerPayload(input: {
   bugReportId: string
   debuggerContentEncoding: string | null
@@ -364,9 +388,9 @@ async function ingestDebuggerPayload(input: {
   const storedPayload = await storage.read(input.debuggerKey)
   const payloadBuffer =
     input.debuggerContentEncoding === "gzip"
-      ? gunzipSync(storedPayload)
+      ? await decompressGzip(storedPayload)
       : storedPayload
-  const rawPayload = JSON.parse(payloadBuffer.toString("utf8")) as {
+  const rawPayload = JSON.parse(new TextDecoder().decode(payloadBuffer)) as {
     actions?: unknown[]
     logs?: unknown[]
     networkRequests?: unknown[]
