@@ -3,7 +3,7 @@ import { organizationBillingAccount } from "@crikket/db/schema/billing"
 import { env } from "@crikket/env/server"
 import { ORPCError } from "@orpc/server"
 import { eq } from "drizzle-orm"
-import { polarClient } from "../../lib/payments"
+import { getPolarClient } from "../../lib/payments"
 import {
   normalizeBillingPlan,
   normalizeBillingSubscriptionStatus,
@@ -29,7 +29,7 @@ async function createPortalSessionByExternalCustomerIds(input: {
 
   for (const externalCustomerId of input.externalCustomerIds) {
     try {
-      const customerSession = await polarClient.customerSessions.create({
+      const customerSession = await getPolarClient().customerSessions.create({
         externalCustomerId,
         returnUrl: input.returnUrl,
       })
@@ -95,7 +95,7 @@ async function recoverPortalStateFromStoredSubscription(input: {
   }
 
   try {
-    const subscription = await polarClient.subscriptions.get({
+    const subscription = await getPolarClient().subscriptions.get({
       id: input.state.subscriptionId,
     })
 
@@ -226,7 +226,7 @@ export async function createOrganizationPortalSession(input: {
   }
 
   try {
-    const customerSession = await polarClient.customerSessions.create({
+    const customerSession = await getPolarClient().customerSessions.create({
       customerId: portalState.customerId,
       returnUrl: env.POLAR_SUCCESS_URL ?? undefined,
     })

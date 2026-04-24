@@ -24,225 +24,238 @@ const MINUTE = 60
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
 
-const allowedSignupDomains = env.ALLOWED_SIGNUP_DOMAINS
+function createAuth() {
+  const allowedSignupDomains = env.ALLOWED_SIGNUP_DOMAINS
 
-const isProduction = env.NODE_ENV === "production"
-const trustedOrigins = Array.from(
-  new Set([env.BETTER_AUTH_URL, ...env.CORS_ORIGINS])
-)
-const crossSubDomainCookies = env.BETTER_AUTH_COOKIE_DOMAIN
-  ? {
-      enabled: true,
-      domain: env.BETTER_AUTH_COOKIE_DOMAIN,
-    }
-  : undefined
-
-const socialProviders =
-  env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+  const isProduction = env.NODE_ENV === "production"
+  const trustedOrigins = Array.from(
+    new Set([env.BETTER_AUTH_URL, ...env.CORS_ORIGINS])
+  )
+  const crossSubDomainCookies = env.BETTER_AUTH_COOKIE_DOMAIN
     ? {
-        google: {
-          clientId: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
-        },
+        enabled: true,
+        domain: env.BETTER_AUTH_COOKIE_DOMAIN,
       }
     : undefined
 
-type CheckoutProductSlug = "pro" | "pro-yearly" | "studio" | "studio-yearly"
+  const socialProviders =
+    env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+          },
+        }
+      : undefined
 
-const checkoutProducts = [
-  env.POLAR_PRO_PRODUCT_ID
-    ? ({ productId: env.POLAR_PRO_PRODUCT_ID, slug: "pro" } as const)
-    : null,
-  env.POLAR_PRO_YEARLY_PRODUCT_ID
-    ? ({
-        productId: env.POLAR_PRO_YEARLY_PRODUCT_ID,
-        slug: "pro-yearly",
-      } as const)
-    : null,
-  env.POLAR_STUDIO_PRODUCT_ID
-    ? ({ productId: env.POLAR_STUDIO_PRODUCT_ID, slug: "studio" } as const)
-    : null,
-  env.POLAR_STUDIO_YEARLY_PRODUCT_ID
-    ? ({
-        productId: env.POLAR_STUDIO_YEARLY_PRODUCT_ID,
-        slug: "studio-yearly",
-      } as const)
-    : null,
-].filter(
-  (product): product is { productId: string; slug: CheckoutProductSlug } =>
-    Boolean(product)
-)
+  type CheckoutProductSlug = "pro" | "pro-yearly" | "studio" | "studio-yearly"
 
-const polarCheckout = checkout({
-  products: checkoutProducts,
-  successUrl: env.POLAR_SUCCESS_URL,
-  authenticatedUsersOnly: true,
-})
+  const checkoutProducts = [
+    env.POLAR_PRO_PRODUCT_ID
+      ? ({ productId: env.POLAR_PRO_PRODUCT_ID, slug: "pro" } as const)
+      : null,
+    env.POLAR_PRO_YEARLY_PRODUCT_ID
+      ? ({
+          productId: env.POLAR_PRO_YEARLY_PRODUCT_ID,
+          slug: "pro-yearly",
+        } as const)
+      : null,
+    env.POLAR_STUDIO_PRODUCT_ID
+      ? ({ productId: env.POLAR_STUDIO_PRODUCT_ID, slug: "studio" } as const)
+      : null,
+    env.POLAR_STUDIO_YEARLY_PRODUCT_ID
+      ? ({
+          productId: env.POLAR_STUDIO_YEARLY_PRODUCT_ID,
+          slug: "studio-yearly",
+        } as const)
+      : null,
+  ].filter(
+    (product): product is { productId: string; slug: CheckoutProductSlug } =>
+      Boolean(product)
+  )
 
-const polarPortal = portal()
-const polarClient = new Polar(getPolarSdkConfig())
+  const polarCheckout = checkout({
+    products: checkoutProducts,
+    successUrl: env.POLAR_SUCCESS_URL,
+    authenticatedUsersOnly: true,
+  })
 
-const paymentsPlugins = env.ENABLE_PAYMENTS
-  ? (() => {
-      assertHostedPaymentsConfiguration()
+  const polarPortal = portal()
+  const polarClient = new Polar(getPolarSdkConfig())
 
-      const webhookSecret = env.POLAR_WEBHOOK_SECRET
-      if (!webhookSecret) {
-        throw new Error("ENABLE_PAYMENTS=true requires POLAR_WEBHOOK_SECRET")
-      }
+  const paymentsPlugins = env.ENABLE_PAYMENTS
+    ? (() => {
+        assertHostedPaymentsConfiguration()
 
-      return [
-        polar({
-          client: polarClient,
-          createCustomerOnSignUp: true,
-          enableCustomerPortal: true,
-          use: [
-            polarCheckout,
-            polarPortal,
-            webhooks({
-              secret: webhookSecret,
-              onPayload: async (payload) => {
-                await processPolarWebhookPayload(
-                  payload as Record<string, unknown>
-                )
-              },
-            }),
-          ],
-        }),
-      ]
-    })()
-  : []
+        const webhookSecret = env.POLAR_WEBHOOK_SECRET
+        if (!webhookSecret) {
+          throw new Error("ENABLE_PAYMENTS=true requires POLAR_WEBHOOK_SECRET")
+        }
 
-export const auth = betterAuth({
-  appName: "crikket",
-  database: drizzleAdapter(db, {
-    provider: "pg",
-    schema,
-  }),
-  trustedOrigins,
-  ...(socialProviders ? { socialProviders } : {}),
-  databaseHooks: {
-    user: {
-      create: {
-        before: async (user) => {
-          await Promise.resolve()
+        return [
+          polar({
+            client: polarClient,
+            createCustomerOnSignUp: true,
+            enableCustomerPortal: true,
+            use: [
+              polarCheckout,
+              polarPortal,
+              webhooks({
+                secret: webhookSecret,
+                onPayload: async (payload) => {
+                  await processPolarWebhookPayload(
+                    payload as Record<string, unknown>
+                  )
+                },
+              }),
+            ],
+          }),
+        ]
+      })()
+    : []
 
-          const email = user.email?.toLowerCase() ?? ""
-          const domain = email.split("@")[1] ?? ""
+  return betterAuth({
+    appName: "crikket",
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema,
+    }),
+    trustedOrigins,
+    ...(socialProviders ? { socialProviders } : {}),
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => {
+            await Promise.resolve()
 
-          const allowAll = allowedSignupDomains.includes("*")
-          if (
-            !allowAll &&
-            allowedSignupDomains.length > 0 &&
-            !allowedSignupDomains.includes(domain)
-          ) {
-            throw new APIError("UNPROCESSABLE_ENTITY", {
-              message: `Sign up is only available for ${allowedSignupDomains.filter((d) => d !== "*").join(", ")} domains.`,
-            })
-          }
+            const email = user.email?.toLowerCase() ?? ""
+            const domain = email.split("@")[1] ?? ""
+
+            const allowAll = allowedSignupDomains.includes("*")
+            if (
+              !allowAll &&
+              allowedSignupDomains.length > 0 &&
+              !allowedSignupDomains.includes(domain)
+            ) {
+              throw new APIError("UNPROCESSABLE_ENTITY", {
+                message: `Sign up is only available for ${allowedSignupDomains.filter((d) => d !== "*").join(", ")} domains.`,
+              })
+            }
+          },
         },
       },
     },
-  },
-  emailVerification: {
-    sendVerificationEmail: async ({ user, url }) => {
-      await sendEmailVerificationLinkEmail({
-        email: user.email,
-        verificationUrl: url,
-      })
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendEmailVerificationLinkEmail({
+          email: user.email,
+          verificationUrl: url,
+        })
+      },
+      sendOnSignUp: false,
+      sendOnSignIn: false,
+      expiresIn: DAY,
     },
-    sendOnSignUp: false,
-    sendOnSignIn: false,
-    expiresIn: DAY,
-  },
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: false,
-    minPasswordLength: 8,
-    maxPasswordLength: 128,
-    revokeSessionsOnPasswordReset: true,
-  },
-  session: {
-    expiresIn: 14 * DAY,
-    updateAge: DAY,
-    cookieCache: {
+    emailAndPassword: {
       enabled: true,
-      maxAge: HOUR,
+      requireEmailVerification: false,
+      minPasswordLength: 8,
+      maxPasswordLength: 128,
+      revokeSessionsOnPasswordReset: true,
     },
-  },
-  rateLimit: {
-    enabled: true,
-    storage: "database",
-    window: MINUTE,
-    max: 100,
-    customRules: {
-      "/sign-in/email": {
-        window: MINUTE,
-        max: 5,
-      },
-      "/sign-up/email": {
-        window: MINUTE,
-        max: 3,
-      },
-      "/email-otp/request-password-reset": {
-        window: MINUTE,
-        max: 5,
-      },
-      "/email-otp/send-verification-otp": {
-        window: MINUTE,
-        max: 5,
-      },
-      "/email-otp/reset-password": {
-        window: MINUTE,
-        max: 5,
+    session: {
+      expiresIn: 14 * DAY,
+      updateAge: DAY,
+      cookieCache: {
+        enabled: true,
+        maxAge: HOUR,
       },
     },
-  },
-  advanced: {
-    useSecureCookies: isProduction,
-    ...(crossSubDomainCookies ? { crossSubDomainCookies } : {}),
-    defaultCookieAttributes: {
-      sameSite: isProduction ? "none" : "lax",
-      secure: isProduction,
-      httpOnly: true,
-    },
-  },
-  plugins: [
-    admin(),
-    organization({
-      sendInvitationEmail: async (data) => {
-        await sendOrganizationInvitationEmail({
-          email: data.email,
-          invitationId: data.id,
-          inviterName: data.inviter.user.name,
-          organizationName: data.organization.name,
-          role: data.role,
-        })
-      },
-      organizationHooks: {
-        beforeAcceptInvitation: async ({ invitation }) => {
-          await assertOrganizationCanAddMembers(invitation.organizationId)
+    rateLimit: {
+      enabled: true,
+      storage: "database",
+      window: MINUTE,
+      max: 100,
+      customRules: {
+        "/sign-in/email": {
+          window: MINUTE,
+          max: 5,
         },
-        beforeCreateInvitation: async ({ invitation }) => {
-          await assertOrganizationCanAddMembers(invitation.organizationId)
+        "/sign-up/email": {
+          window: MINUTE,
+          max: 3,
+        },
+        "/email-otp/request-password-reset": {
+          window: MINUTE,
+          max: 5,
+        },
+        "/email-otp/send-verification-otp": {
+          window: MINUTE,
+          max: 5,
+        },
+        "/email-otp/reset-password": {
+          window: MINUTE,
+          max: 5,
         },
       },
-    }),
-    emailOTP({
-      sendVerificationOTP: async ({ email, otp, type }) => {
-        await sendEmailOtpEmail({
-          email,
-          otp,
-          type,
-        })
+    },
+    advanced: {
+      useSecureCookies: isProduction,
+      ...(crossSubDomainCookies ? { crossSubDomainCookies } : {}),
+      defaultCookieAttributes: {
+        sameSite: isProduction ? "none" : "lax",
+        secure: isProduction,
+        httpOnly: true,
       },
-      sendVerificationOnSignUp: true,
-      overrideDefaultEmailVerification: true,
-      expiresIn: 10 * MINUTE,
-      otpLength: 6,
-      allowedAttempts: 5,
-      storeOTP: "hashed",
-    }),
-    ...paymentsPlugins,
-  ],
+    },
+    plugins: [
+      admin(),
+      organization({
+        sendInvitationEmail: async (data) => {
+          await sendOrganizationInvitationEmail({
+            email: data.email,
+            invitationId: data.id,
+            inviterName: data.inviter.user.name,
+            organizationName: data.organization.name,
+            role: data.role,
+          })
+        },
+        organizationHooks: {
+          beforeAcceptInvitation: async ({ invitation }) => {
+            await assertOrganizationCanAddMembers(invitation.organizationId)
+          },
+          beforeCreateInvitation: async ({ invitation }) => {
+            await assertOrganizationCanAddMembers(invitation.organizationId)
+          },
+        },
+      }),
+      emailOTP({
+        sendVerificationOTP: async ({ email, otp, type }) => {
+          await sendEmailOtpEmail({
+            email,
+            otp,
+            type,
+          })
+        },
+        sendVerificationOnSignUp: true,
+        overrideDefaultEmailVerification: true,
+        expiresIn: 10 * MINUTE,
+        otpLength: 6,
+        allowedAttempts: 5,
+        storeOTP: "hashed",
+      }),
+      ...paymentsPlugins,
+    ],
+  })
+}
+
+let _auth: ReturnType<typeof createAuth> | undefined
+
+export const auth = new Proxy({} as ReturnType<typeof createAuth>, {
+  get(_, prop) {
+    if (!_auth) {
+      _auth = createAuth()
+    }
+    return (_auth as Record<string | symbol, unknown>)[prop]
+  },
 })

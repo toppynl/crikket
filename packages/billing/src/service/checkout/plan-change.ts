@@ -2,7 +2,7 @@ import { db } from "@crikket/db"
 import { organizationBillingAccount } from "@crikket/db/schema/billing"
 import { ORPCError } from "@orpc/server"
 import { eq } from "drizzle-orm"
-import { polarClient } from "../../lib/payments"
+import { getPolarClient } from "../../lib/payments"
 import {
   normalizeBillingPlan,
   normalizeBillingSubscriptionStatus,
@@ -118,7 +118,7 @@ export async function changeOrganizationPlan(input: {
   }
 
   try {
-    const subscription = await polarClient.subscriptions.update({
+    const subscription = await getPolarClient().subscriptions.update({
       id: updatableSubscription.id,
       subscriptionUpdate: {
         productId: targetProductId,

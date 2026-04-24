@@ -23,9 +23,6 @@ import { handleCaptureToken } from "./capture/token-route"
 import { handleCaptureUploadSession } from "./capture/upload-session-route"
 
 const app = new Hono()
-const allowedCorsOrigins = env.CORS_ORIGINS
-const fallbackCorsOrigin = allowedCorsOrigins[0] ?? env.BETTER_AUTH_URL
-const captureShareOrigin = allowedCorsOrigins[0] ?? env.BETTER_AUTH_URL
 const MAX_RPC_REQUEST_BODY_BYTES = 110 * 1024 * 1024
 const BUG_REPORT_INGESTION_INTERVAL_MS = 60 * 1000
 const BUG_REPORT_ORPHAN_CLEANUP_INTERVAL_MS = 60 * 60 * 1000
@@ -111,9 +108,10 @@ app.use(
       ) {
         return origin
       }
+      const allowedCorsOrigins = env.CORS_ORIGINS
       if (allowedCorsOrigins.includes(origin)) return origin
       if (origin.startsWith("chrome-extension://")) return origin
-      return fallbackCorsOrigin
+      return allowedCorsOrigins[0] ?? env.BETTER_AUTH_URL
     },
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: [
@@ -139,9 +137,10 @@ app.post("/api/embed/bug-report-upload-session", (c) => {
   })
 })
 app.post("/api/embed/bug-report-finalize", (c) => {
+  const allowedCorsOrigins = env.CORS_ORIGINS
   return handleCaptureFinalize({
     request: c.req.raw,
-    shareOrigin: captureShareOrigin,
+    shareOrigin: allowedCorsOrigins[0] ?? env.BETTER_AUTH_URL,
   })
 })
 
