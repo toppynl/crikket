@@ -1,0 +1,18 @@
+{
+  "name": "jobs-cloudrun",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "check-types": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@crikket/jobs": "workspace:*"
+  },
+  "devDependencies": {
+    "@crikket/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}
