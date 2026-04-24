@@ -359,7 +359,7 @@ async function decompressGzip(input: Uint8Array): Promise<Uint8Array> {
   const writer = ds.writable.getWriter()
   const reader = ds.readable.getReader()
 
-  writer.write(input as Uint8Array<ArrayBuffer>)
+  await writer.write(input as Uint8Array<ArrayBuffer>)
   await writer.close()
 
   const chunks: Uint8Array[] = []
