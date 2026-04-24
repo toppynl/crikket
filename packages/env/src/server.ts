@@ -78,6 +78,15 @@ export type ServerEnv = ReturnType<typeof createServerEnv>
 // process.env is populated with Worker bindings.
 let _env: ServerEnv | undefined
 
+// Call this from Cloudflare Worker fetch/scheduled handlers to initialize env
+// from Worker bindings before any request handler runs.
+export function initServerEnv(
+  runtimeEnv: Record<string, unknown>
+): ServerEnv {
+  _env = createServerEnv(runtimeEnv as Record<string, string | undefined>)
+  return _env
+}
+
 export const env = new Proxy({} as ServerEnv, {
   get(_, prop) {
     if (!_env) {
