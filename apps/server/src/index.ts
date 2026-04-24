@@ -1,3 +1,4 @@
+import "dotenv/config"
 import { createContext } from "@crikket/api/context"
 import {
   buildRpcRateLimitErrorResponse,
@@ -194,23 +195,23 @@ if (env.BACKGROUND_JOBS === "native") {
   }, BUG_REPORT_ORPHAN_CLEANUP_INTERVAL_MS)
 
   orphanCleanupInterval.unref?.()
+
+  const githubWebhookProcessorInterval = setInterval(() => {
+    runGitHubWebhookProcessorPass({ limit: 20 }).catch((error) => {
+      console.error("[github-webhook-processor] failed scheduled pass", error)
+    })
+  }, GITHUB_WEBHOOK_PROCESSOR_INTERVAL_MS)
+
+  githubWebhookProcessorInterval.unref?.()
+
+  const githubAutoSyncInterval = setInterval(() => {
+    runGitHubAutoSyncPass({ limit: 20 }).catch((error) => {
+      console.error("[github-auto-sync] failed scheduled pass", error)
+    })
+  }, GITHUB_AUTO_SYNC_INTERVAL_MS)
+
+  githubAutoSyncInterval.unref?.()
 }
-
-const githubWebhookProcessorInterval = setInterval(() => {
-  runGitHubWebhookProcessorPass({ limit: 20 }).catch((error) => {
-    console.error("[github-webhook-processor] failed scheduled pass", error)
-  })
-}, GITHUB_WEBHOOK_PROCESSOR_INTERVAL_MS)
-
-githubWebhookProcessorInterval.unref?.()
-
-const githubAutoSyncInterval = setInterval(() => {
-  runGitHubAutoSyncPass({ limit: 20 }).catch((error) => {
-    console.error("[github-auto-sync] failed scheduled pass", error)
-  })
-}, GITHUB_AUTO_SYNC_INTERVAL_MS)
-
-githubAutoSyncInterval.unref?.()
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
   plugins: [
