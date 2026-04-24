@@ -39,15 +39,18 @@ const OTP_ACTION_URLS: Record<AuthEmailOtpType, string> = {
   "sign-in": "/login",
 }
 
-const appUrl = env.CORS_ORIGINS[0]
-
-if (!appUrl) {
-  throw new Error(
-    "CORS_ORIGINS must include a frontend origin for auth email links."
-  )
+const getAppUrl = (): string => {
+  const appUrl = env.CORS_ORIGINS[0]
+  if (!appUrl) {
+    throw new Error(
+      "CORS_ORIGINS must include a frontend origin for auth email links."
+    )
+  }
+  return appUrl
 }
 
 const toAppUrl = (urlOrPath: string): string => {
+  const appUrl = getAppUrl()
   const parsed = new URL(urlOrPath, appUrl)
   const appRelativeUrl = `${parsed.pathname}${parsed.search}${parsed.hash}`
 
@@ -59,7 +62,7 @@ export const sendEmailOtpEmail = async ({
   otp,
   type,
 }: SendEmailOtpEmailInput): Promise<void> => {
-  const actionUrl = new URL(OTP_ACTION_URLS[type], appUrl)
+  const actionUrl = new URL(OTP_ACTION_URLS[type], getAppUrl())
 
   await sendAuthEmail({
     to: email,
