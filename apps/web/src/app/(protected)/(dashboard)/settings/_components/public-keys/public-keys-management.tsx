@@ -209,10 +209,10 @@ export function PublicKeysManagement({
               deletingKeyId={pendingKeyIds.deleting}
               items={keys}
               onAssignToProject={openAssignDialog}
-              onDelete={(input) => deleteMutation.mutateAsync(input)}
+              onDelete={async (input) => { await deleteMutation.mutateAsync(input) }}
               onEdit={(item) => setEditingItem(item)}
-              onRevoke={(input) => revokeMutation.mutateAsync(input)}
-              onRotate={(input) => rotateMutation.mutateAsync(input)}
+              onRevoke={async (input) => { await revokeMutation.mutateAsync(input) }}
+              onRotate={async (input) => { await rotateMutation.mutateAsync(input) }}
               revokingKeyId={pendingKeyIds.revoking}
               rotatingKeyId={pendingKeyIds.rotating}
             />
@@ -285,9 +285,9 @@ export function PublicKeysManagement({
         assigningKeyId={assigningKeyId}
         isAssigning={assignToProjectMutation.isPending}
         onClose={closeAssignDialog}
-        onSave={(keyId, projectId) =>
-          assignToProjectMutation.mutateAsync({ keyId, projectId })
-        }
+        onSave={async (keyId, projectId) => {
+          await assignToProjectMutation.mutateAsync({ keyId, projectId })
+        }}
         onSelectProject={setSelectedProjectId}
         projects={projects}
         selectedProjectId={selectedProjectId}
