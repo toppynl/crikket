@@ -1,4 +1,3 @@
-import "dotenv/config"
 import { createContext } from "@crikket/api/context"
 import {
   buildRpcRateLimitErrorResponse,
