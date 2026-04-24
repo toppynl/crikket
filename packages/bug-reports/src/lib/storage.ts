@@ -188,10 +188,13 @@ export function createS3StorageProvider(
   }
 }
 
-const storageProvider = createS3StorageProvider(getCloudStorageConfig())
+let _storageProvider: StorageProvider | undefined
 
 export function getStorageProvider(): StorageProvider {
-  return storageProvider
+  if (!_storageProvider) {
+    _storageProvider = createS3StorageProvider(getCloudStorageConfig())
+  }
+  return _storageProvider
 }
 
 export async function resolveCaptureUrl(input: {
@@ -201,7 +204,7 @@ export async function resolveCaptureUrl(input: {
     return null
   }
 
-  return await storageProvider.getUrl(input.captureKey)
+  return await getStorageProvider().getUrl(input.captureKey)
 }
 
 export function isExpiringSignedUrl(url: string): boolean {
@@ -234,7 +237,7 @@ export async function removeArtifactEventually(input: {
   objectKey: string
 }): Promise<void> {
   try {
-    await storageProvider.remove(input.objectKey)
+    await getStorageProvider().remove(input.objectKey)
     await clearArtifactCleanupEntry(input.objectKey)
   } catch (error) {
     reportNonFatalError(
@@ -260,7 +263,7 @@ export async function runArtifactCleanupPass(options?: {
 
   for (const entry of dueEntries) {
     try {
-      await storageProvider.remove(entry.objectKey)
+      await getStorageProvider().remove(entry.objectKey)
       await clearArtifactCleanupEntry(entry.objectKey)
       removed += 1
     } catch (error) {
