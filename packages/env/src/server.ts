@@ -83,6 +83,15 @@ export function createServerEnv(
 export type ServerEnv = ReturnType<typeof createServerEnv>
 
 // Traditional targets (Bun, Node.js, Lambda, Cloud Run): use this singleton.
-export const env = createServerEnv(
-  process.env as Record<string, string | undefined>
-)
+// Lazy proxy so Cloudflare Workers startup check doesn't run validation before
+// process.env is populated with Worker bindings.
+let _env: ServerEnv | undefined
+
+export const env = new Proxy({} as ServerEnv, {
+  get(_, prop) {
+    if (!_env) {
+      _env = createServerEnv(process.env as Record<string, string | undefined>)
+    }
+    return Reflect.get(_env, prop)
+  },
+})
