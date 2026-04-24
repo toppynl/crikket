@@ -56,3 +56,6 @@ backups/
 .agents/
 AGENTS.md
 .worktrees/
+
+# Local deployment configs (never committed)
+/deploy/
