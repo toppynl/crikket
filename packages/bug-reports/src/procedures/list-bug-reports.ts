@@ -99,6 +99,7 @@ const listBugReportsInputSchema = z
       .array(z.enum(visibilityValues))
       .max(visibilityValues.length)
       .optional(),
+    projectId: z.string().optional(),
     sort: z.enum(sortValues).default(BUG_REPORT_SORT_OPTIONS.newest),
   })
   .optional()
@@ -302,6 +303,10 @@ export const listBugReports = protectedProcedure
         filters.push(
           inArray(bugReport.visibility, Array.from(new Set(input.visibilities)))
         )
+      }
+
+      if (input?.projectId) {
+        filters.push(eq(bugReport.projectId, input.projectId))
       }
 
       const whereClause =

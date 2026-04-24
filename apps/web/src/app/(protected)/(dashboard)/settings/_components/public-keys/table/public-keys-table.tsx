@@ -16,9 +16,11 @@ import type { PublicKeyItem } from "../types"
 import { createPublicKeysTableColumns } from "./public-keys-table-columns"
 
 interface PublicKeysTableProps {
+  assigningToProjectKeyId: string | null
   canManage: boolean
   deletingKeyId: string | null
   items: PublicKeyItem[]
+  onAssignToProject: (keyId: string) => void
   onDelete: (input: { keyId: string }) => Promise<void>
   onEdit: (item: PublicKeyItem) => void
   onRevoke: (input: { keyId: string }) => Promise<void>
@@ -28,9 +30,11 @@ interface PublicKeysTableProps {
 }
 
 export function PublicKeysTable({
+  assigningToProjectKeyId,
   canManage,
   deletingKeyId,
   items,
+  onAssignToProject,
   onDelete,
   onEdit,
   onRevoke,
@@ -52,8 +56,10 @@ export function PublicKeysTable({
   const columns = React.useMemo(
     () =>
       createPublicKeysTableColumns({
+        assigningToProjectKeyId,
         canManage,
         deletingKeyId,
+        onAssignToProject,
         onDelete,
         onEdit,
         onRevoke,
@@ -62,8 +68,10 @@ export function PublicKeysTable({
         rotatingKeyId,
       }),
     [
+      assigningToProjectKeyId,
       canManage,
       deletingKeyId,
+      onAssignToProject,
       onDelete,
       onEdit,
       onRevoke,

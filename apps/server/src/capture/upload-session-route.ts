@@ -76,6 +76,7 @@ export async function handleCaptureUploadSession(input: {
     const result = await createBugReportUploadSession({
       input: requestBody,
       organizationId: authorization.organizationId,
+      projectId: authorization.projectId,
       reporterId: null,
     })
 

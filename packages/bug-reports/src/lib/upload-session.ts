@@ -134,6 +134,7 @@ function resolveCaptureContentType(input: {
 export async function createBugReportUploadSession(input: {
   input: CreateBugReportUploadSessionInput
   organizationId: string
+  projectId?: string | null
   reporterId?: string | null
   tags?: string[] | undefined
 }): Promise<{
@@ -180,6 +181,7 @@ export async function createBugReportUploadSession(input: {
     await db.insert(bugReportUploadSession).values({
       id: bugReportId,
       organizationId: input.organizationId,
+      projectId: input.projectId ?? null,
       reporterId: input.reporterId ?? null,
       title: inferredTitle,
       description: input.input.description,
@@ -335,6 +337,7 @@ export async function finalizeBugReportUpload(input: {
     await tx.insert(bugReport).values({
       id: uploadSession.id,
       organizationId: uploadSession.organizationId,
+      projectId: uploadSession.projectId ?? null,
       reporterId: uploadSession.reporterId,
       title: uploadSession.title,
       description: uploadSession.description,

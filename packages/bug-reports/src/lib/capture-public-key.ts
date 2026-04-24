@@ -22,6 +22,7 @@ export interface CapturePublicKeyRecord {
   key: string
   label: string
   organizationId: string
+  projectId: string | null
   revokedAt: Date | null
   rotatedAt: Date | null
   status: CapturePublicKeyStatus
@@ -128,6 +129,7 @@ function toCapturePublicKeyRecord(
     key: record.key,
     label: record.label,
     organizationId: record.organizationId,
+    projectId: record.projectId ?? null,
     revokedAt: record.revokedAt,
     rotatedAt: record.rotatedAt,
     status: record.status as CapturePublicKeyStatus,
@@ -382,6 +384,24 @@ export async function deleteCapturePublicKey(input: {
     )
 
   return true
+}
+
+export async function assignCaptureKeyToProject(input: {
+  keyId: string
+  organizationId: string
+  projectId: string | null
+}): Promise<CapturePublicKeyRecord | null> {
+  const [updatedRecord] = await db
+    .update(capturePublicKey)
+    .set({ projectId: input.projectId })
+    .where(
+      and(
+        eq(capturePublicKey.id, input.keyId),
+        eq(capturePublicKey.organizationId, input.organizationId)
+      )
+    )
+    .returning()
+  return updatedRecord ? toCapturePublicKeyRecord(updatedRecord) : null
 }
 
 export function rotateCapturePublicKey(input: {

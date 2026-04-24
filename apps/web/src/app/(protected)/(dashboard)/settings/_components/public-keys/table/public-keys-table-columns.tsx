@@ -30,10 +30,12 @@ function formatOriginsPreview(origins: string[]): string {
 }
 
 interface CreatePublicKeysTableColumnsInput {
+  assigningToProjectKeyId: string | null
   canManage: boolean
   deletingKeyId: string | null
   revokingKeyId: string | null
   rotatingKeyId: string | null
+  onAssignToProject: (keyId: string) => void
   onDelete: (input: { keyId: string }) => Promise<void>
   onEdit: (item: PublicKeyItem) => void
   onRevoke: (input: { keyId: string }) => Promise<void>
@@ -41,10 +43,12 @@ interface CreatePublicKeysTableColumnsInput {
 }
 
 export function createPublicKeysTableColumns({
+  assigningToProjectKeyId,
   canManage,
   deletingKeyId,
   revokingKeyId,
   rotatingKeyId,
+  onAssignToProject,
   onDelete,
   onEdit,
   onRevoke,
@@ -101,10 +105,14 @@ export function createPublicKeysTableColumns({
         <div className="flex justify-end">
           <PublicKeyRowActions
             canManage={canManage}
+            isAssigningToProject={
+              assigningToProjectKeyId === row.original.id
+            }
             isDeleting={deletingKeyId === row.original.id}
             isRevoking={revokingKeyId === row.original.id}
             isRotating={rotatingKeyId === row.original.id}
             item={row.original}
+            onAssignToProject={onAssignToProject}
             onDelete={onDelete}
             onEdit={onEdit}
             onRevoke={onRevoke}

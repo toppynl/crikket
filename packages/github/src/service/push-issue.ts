@@ -2,7 +2,11 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { db } from "@crikket/db"
 import { bugReport } from "@crikket/db/schema/bug-report"
-import { githubIntegration, githubIssueLink } from "@crikket/db/schema/github"
+import {
+  githubIntegration,
+  githubIssueLink,
+  projectGithubConfig,
+} from "@crikket/db/schema/github"
 import { env } from "@crikket/env/server"
 import { and, asc, eq } from "drizzle-orm"
 import { nanoid } from "nanoid"
@@ -10,6 +14,7 @@ import { getInstallationOctokit } from "../client"
 import { ensureLabelsExist, mapBugReportToIssue } from "../issue-mapper"
 
 const DEFAULT_ARTIFACT_URL_TTL_SECONDS = 31_536_000
+const TRAILING_SLASH_REGEX = /\/$/
 
 export type PushIssueResult = {
   issueUrl: string
@@ -65,20 +70,50 @@ export async function pushBugReportToGitHub(
     throw new Error("Bug report not found")
   }
 
-  const [integration] = await db
+  let owner: string
+  let repo: string
+
+  const orgIntegration = await db
     .select()
     .from(githubIntegration)
     .where(eq(githubIntegration.organizationId, organizationId))
     .limit(1)
+    .then((rows) => rows[0] ?? null)
 
-  if (!integration) {
-    throw new Error("GitHub integration not configured for this organization")
+  if (!orgIntegration) {
+    throw new Error("GitHub integration not configured")
   }
 
-  const owner = integration.defaultOwner
-  const repo = integration.defaultRepo
+  const installationId = orgIntegration.installationId
+
+  if (report.projectId) {
+    const projConfig = await db
+      .select()
+      .from(projectGithubConfig)
+      .where(
+        and(
+          eq(projectGithubConfig.projectId, report.projectId),
+          eq(projectGithubConfig.organizationId, organizationId)
+        )
+      )
+      .limit(1)
+      .then((rows) => rows[0] ?? null)
+
+    if (projConfig) {
+      owner = projConfig.owner
+      repo = projConfig.repo
+    } else {
+      owner = orgIntegration.defaultOwner
+      repo = orgIntegration.defaultRepo
+    }
+  } else {
+    owner = orgIntegration.defaultOwner
+    repo = orgIntegration.defaultRepo
+  }
+
   const ttl =
-    env.GITHUB_ISSUE_ARTIFACT_URL_TTL_SECONDS ?? DEFAULT_ARTIFACT_URL_TTL_SECONDS
+    env.GITHUB_ISSUE_ARTIFACT_URL_TTL_SECONDS ??
+    DEFAULT_ARTIFACT_URL_TTL_SECONDS
 
   const [captureUrl, debuggerUrl] = await Promise.all([
     resolveArtifactUrl(report.captureKey ?? null, ttl),
@@ -107,7 +142,7 @@ export async function pushBugReportToGitHub(
     crikketAppUrl
   )
 
-  const octokit = await getInstallationOctokit(integration.installationId)
+  const octokit = await getInstallationOctokit(installationId)
 
   await ensureLabelsExist(octokit, owner, repo, labels, labelColors)
 
@@ -133,27 +168,29 @@ export async function pushBugReportToGitHub(
   }
 }
 
-async function resolveArtifactUrl(
+function resolveArtifactUrl(
   key: string | null,
   ttlSeconds: number
 ): Promise<string | null> {
-  if (!key) return null
+  if (!key) return Promise.resolve(null)
 
   if (env.STORAGE_PUBLIC_URL) {
-    const base = env.STORAGE_PUBLIC_URL.replace(/\/$/, "")
+    const base = env.STORAGE_PUBLIC_URL.replace(TRAILING_SLASH_REGEX, "")
     const encodedKey = key
       .split("/")
       .map((s) => encodeURIComponent(s))
       .join("/")
-    return `${base}/${encodedKey}`
+    return Promise.resolve(`${base}/${encodedKey}`)
   }
 
   if (
-    !env.STORAGE_BUCKET ||
-    !env.STORAGE_ACCESS_KEY_ID ||
-    !env.STORAGE_SECRET_ACCESS_KEY
+    !(
+      env.STORAGE_BUCKET &&
+      env.STORAGE_ACCESS_KEY_ID &&
+      env.STORAGE_SECRET_ACCESS_KEY
+    )
   ) {
-    return null
+    return Promise.resolve(null)
   }
 
   const region =
