@@ -48,41 +48,6 @@ function createAuth() {
         }
       : undefined
 
-  type CheckoutProductSlug = "pro" | "pro-yearly" | "studio" | "studio-yearly"
-
-  const checkoutProducts = [
-    env.POLAR_PRO_PRODUCT_ID
-      ? ({ productId: env.POLAR_PRO_PRODUCT_ID, slug: "pro" } as const)
-      : null,
-    env.POLAR_PRO_YEARLY_PRODUCT_ID
-      ? ({
-          productId: env.POLAR_PRO_YEARLY_PRODUCT_ID,
-          slug: "pro-yearly",
-        } as const)
-      : null,
-    env.POLAR_STUDIO_PRODUCT_ID
-      ? ({ productId: env.POLAR_STUDIO_PRODUCT_ID, slug: "studio" } as const)
-      : null,
-    env.POLAR_STUDIO_YEARLY_PRODUCT_ID
-      ? ({
-          productId: env.POLAR_STUDIO_YEARLY_PRODUCT_ID,
-          slug: "studio-yearly",
-        } as const)
-      : null,
-  ].filter(
-    (product): product is { productId: string; slug: CheckoutProductSlug } =>
-      Boolean(product)
-  )
-
-  const polarCheckout = checkout({
-    products: checkoutProducts,
-    successUrl: env.POLAR_SUCCESS_URL,
-    authenticatedUsersOnly: true,
-  })
-
-  const polarPortal = portal()
-  const polarClient = new Polar(getPolarSdkConfig())
-
   const paymentsPlugins = env.ENABLE_PAYMENTS
     ? (() => {
         assertHostedPaymentsConfiguration()
@@ -91,6 +56,47 @@ function createAuth() {
         if (!webhookSecret) {
           throw new Error("ENABLE_PAYMENTS=true requires POLAR_WEBHOOK_SECRET")
         }
+
+        type CheckoutProductSlug =
+          | "pro"
+          | "pro-yearly"
+          | "studio"
+          | "studio-yearly"
+
+        const checkoutProducts = [
+          env.POLAR_PRO_PRODUCT_ID
+            ? ({ productId: env.POLAR_PRO_PRODUCT_ID, slug: "pro" } as const)
+            : null,
+          env.POLAR_PRO_YEARLY_PRODUCT_ID
+            ? ({
+                productId: env.POLAR_PRO_YEARLY_PRODUCT_ID,
+                slug: "pro-yearly",
+              } as const)
+            : null,
+          env.POLAR_STUDIO_PRODUCT_ID
+            ? ({
+                productId: env.POLAR_STUDIO_PRODUCT_ID,
+                slug: "studio",
+              } as const)
+            : null,
+          env.POLAR_STUDIO_YEARLY_PRODUCT_ID
+            ? ({
+                productId: env.POLAR_STUDIO_YEARLY_PRODUCT_ID,
+                slug: "studio-yearly",
+              } as const)
+            : null,
+        ].filter(
+          (product): product is { productId: string; slug: CheckoutProductSlug } =>
+            Boolean(product)
+        )
+
+        const polarClient = new Polar(getPolarSdkConfig())
+        const polarCheckout = checkout({
+          products: checkoutProducts,
+          successUrl: env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        })
+        const polarPortal = portal()
 
         return [
           polar({
