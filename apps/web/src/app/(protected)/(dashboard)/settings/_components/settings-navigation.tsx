@@ -27,6 +27,12 @@ const SETTINGS_ITEMS = [
     icon: Building2,
   },
   {
+    href: "/settings/projects",
+    title: "Projects",
+    description: "Manage projects",
+    icon: FolderOpen,
+  },
+  {
     href: "/settings/keys",
     title: "Public Keys",
     description: "Widget keys, origins, embeds",
