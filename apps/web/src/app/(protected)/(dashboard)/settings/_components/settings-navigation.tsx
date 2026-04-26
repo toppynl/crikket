@@ -4,6 +4,7 @@ import { cn } from "@crikket/ui/lib/utils"
 import {
   Building2,
   CreditCard,
+  FolderOpen,
   Github,
   KeyRound,
   UserRound,
@@ -24,6 +25,12 @@ const SETTINGS_ITEMS = [
     title: "Organization",
     description: "Workspace, members, invites",
     icon: Building2,
+  },
+  {
+    href: "/settings/projects",
+    title: "Projects",
+    description: "Manage projects",
+    icon: FolderOpen,
   },
   {
     href: "/settings/keys",
