@@ -29,7 +29,7 @@ const SETTINGS_ITEMS = [
   {
     href: "/settings/projects",
     title: "Projects",
-    description: "Manage projects",
+    description: "Manage projects and integrations",
     icon: FolderOpen,
   },
   {
@@ -43,12 +43,6 @@ const SETTINGS_ITEMS = [
     title: "Billing",
     description: "Plan, pricing, payments",
     icon: CreditCard,
-  },
-  {
-    href: "/settings/projects",
-    title: "Projects",
-    description: "Manage projects and integrations",
-    icon: FolderOpen,
   },
   {
     href: "/settings/integrations/github",
