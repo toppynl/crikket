@@ -29,11 +29,15 @@ export function validateReviewDraft(
 ): ReviewDraftErrors | undefined {
   const errors: ReviewDraftErrors = {}
 
-  if (value.title.length > 200) {
+  if (value.title.trim().length === 0) {
+    errors.title = "Title is required."
+  } else if (value.title.length > 200) {
     errors.title = "Title must be at most 200 characters."
   }
 
-  if (value.description.length > 3000) {
+  if (value.description.trim().length === 0) {
+    errors.description = "Description is required."
+  } else if (value.description.length > 3000) {
     errors.description = "Description must be at most 3000 characters."
   }
 

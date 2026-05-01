@@ -133,7 +133,7 @@ export function ReviewFormSection({
                 onChange={(event) => {
                   form.setFieldValue("title", event.currentTarget.value)
                 }}
-                placeholder="Enter a title (optional)"
+                placeholder="Enter a title"
                 value={form.draft.title}
               />
               {form.visibleErrors.title ? (
@@ -154,7 +154,7 @@ export function ReviewFormSection({
                 onChange={(event) => {
                   form.setFieldValue("description", event.currentTarget.value)
                 }}
-                placeholder="Enter a description (optional)"
+                placeholder="Enter a description"
                 value={form.draft.description}
               />
               {form.visibleErrors.description ? (

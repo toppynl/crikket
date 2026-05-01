@@ -31,10 +31,9 @@ import {
 } from "./ingestion-jobs"
 import { getStorageProvider } from "./storage"
 import {
-  buildFallbackTitle,
   formatDurationMs,
   metadataInputSchema,
-  optionalText,
+  requiredText,
   visibilityValues,
 } from "./utils"
 
@@ -54,8 +53,8 @@ const debuggerSummarySchema = z.object({
 })
 
 export const createBugReportUploadSessionInputSchema = z.object({
-  title: optionalText(200),
-  description: optionalText(3000),
+  title: requiredText(200),
+  description: requiredText(3000),
   priority: z.enum(priorityValues).default(PRIORITY_OPTIONS.none),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   url: z.string().url().optional(),
@@ -159,11 +158,6 @@ export async function createBugReportUploadSession(input: {
 
   const storage = getStorageProvider()
   const normalizedMetadata = normalizeUploadMetadata(input.input.metadata)
-  const inferredTitle =
-    input.input.title ??
-    input.input.metadata?.pageTitle?.trim() ??
-    buildFallbackTitle(input.input.attachmentType)
-
   const result = await retryOnUniqueViolation(async () => {
     const bugReportId = nanoid(12)
     const captureKey = buildCaptureArtifactKey({
@@ -183,7 +177,7 @@ export async function createBugReportUploadSession(input: {
       organizationId: input.organizationId,
       projectId: input.projectId ?? null,
       reporterId: input.reporterId ?? null,
-      title: inferredTitle,
+      title: input.input.title,
       description: input.input.description,
       priority: input.input.priority,
       tags: input.tags,

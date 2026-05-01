@@ -56,6 +56,13 @@ export const optionalText = (max: number) =>
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined))
 
+export const requiredText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .max(max)
+
 export const metadataInputSchema = z
   .object({
     duration: z.string().max(20).optional(),
@@ -164,15 +171,6 @@ export function normalizeDebuggerNetworkRequestPagination(input: {
   }
 }
 
-export function buildFallbackTitle(
-  attachmentType: "video" | "screenshot"
-): string {
-  const now = new Date()
-  const label =
-    attachmentType === "video" ? "Video Bug Report" : "Screenshot Bug Report"
-  const timestamp = now.toISOString().replace("T", " ").slice(0, 16)
-  return `${label} - ${timestamp}`
-}
 
 export function formatDurationMs(durationMs: number): string {
   const safeDurationMs = Math.max(0, Math.floor(durationMs))
