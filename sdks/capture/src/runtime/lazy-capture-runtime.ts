@@ -29,7 +29,7 @@ export class LazyCaptureSdkRuntime implements CaptureRuntimeController {
 
   init(options: CaptureInitOptions): CaptureRuntimeController {
     const runtimeConfig: CaptureRuntimeConfig = {
-      key: normalizeKey(options.key),
+      key: normalizeKey(options.captureKey ?? options.key ?? ""),
       host: normalizeHost(options.host),
       submitPath: normalizeSubmitPath(options.submitPath),
       zIndex: normalizeZIndex(options.zIndex),
