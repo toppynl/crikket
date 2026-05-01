@@ -39,6 +39,13 @@ export const listProjectsProcedure = protectedProcedure.handler(
   }
 )
 
+export const getProjectProcedure = protectedProcedure
+  .input(projectIdSchema)
+  .handler(async ({ context, input }) => {
+    const organizationId = requireActiveOrgId(context.session)
+    return await getProjectById({ id: input.id, organizationId })
+  })
+
 export const createProjectProcedure = protectedProcedure
   .input(createProjectInputSchema)
   .handler(async ({ context, input }) => {
