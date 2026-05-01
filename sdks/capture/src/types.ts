@@ -76,8 +76,7 @@ export interface BugReportDebuggerPayload {
 }
 
 export interface CaptureInitOptions {
-  key?: string
-  captureKey?: string
+  key: string
   host?: string
   autoMount?: boolean
   mountTarget?: HTMLElement

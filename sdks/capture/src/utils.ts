@@ -6,15 +6,15 @@ import {
 } from "./constants"
 import type { BridgePayload } from "./types"
 
-export function normalizeKey(value: string): string {
-  const normalized = value.trim()
-  if (!normalized) {
-    throw new Error(
-      "@crikket-io/capture requires a non-empty key in capture.init({ key })"
+export function normalizeKey(value: unknown): string {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    console.error(
+      "[crikket] init() called without a valid `key`. Pass your capture key: CrikketCapture.init({ key: '...' })"
     )
+    return ""
   }
 
-  return normalized
+  return value.trim()
 }
 
 export function normalizeHost(value?: string): string {

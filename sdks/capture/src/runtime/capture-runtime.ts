@@ -34,8 +34,13 @@ export class CaptureSdkRuntime implements CaptureRuntimeController {
   private currentReview: ReviewSnapshot | null = null
 
   init(options: CaptureInitOptions): CaptureRuntimeController {
+    const key = normalizeKey(options.key)
+    if (!key) {
+      return createNoopController()
+    }
+
     const config: CaptureRuntimeConfig = {
-      key: normalizeKey(options.captureKey ?? options.key ?? ""),
+      key,
       host: normalizeHost(options.host),
       submitPath: normalizeSubmitPath(options.submitPath),
       zIndex: normalizeZIndex(options.zIndex),
@@ -349,6 +354,26 @@ export class CaptureSdkRuntime implements CaptureRuntimeController {
     if (typeof window === "undefined" || typeof document === "undefined") {
       throw new Error("Capture SDK can only run in a browser environment.")
     }
+  }
+}
+
+export function createNoopController(): CaptureRuntimeController {
+  const noop = (): void => {}
+  const noopAsync = (): Promise<never> =>
+    Promise.reject(new Error("[crikket] SDK not initialized."))
+  return {
+    open: noop,
+    close: noop,
+    destroy: noop,
+    mount: noop,
+    unmount: noop,
+    reset: noop,
+    startRecording: noopAsync,
+    stopRecording: () => Promise.resolve(null),
+    takeScreenshot: () => Promise.resolve(null),
+    submit: noopAsync,
+    isInitialized: () => false,
+    getConfig: () => null,
   }
 }
 
