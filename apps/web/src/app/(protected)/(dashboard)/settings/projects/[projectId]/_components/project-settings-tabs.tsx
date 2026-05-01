@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@crikket/ui/lib/utils"
+import type { Route } from "next"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -31,7 +32,7 @@ export function ProjectSettingsTabs({ projectId }: Props) {
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
-            href={tab.href}
+            href={tab.href as Route}
             key={tab.href}
           >
             {tab.label}
