@@ -12,7 +12,7 @@ export const listRepos = protectedProcedure
 
     const orgIntegration = await getGitHubIntegration(organizationId)
     if (
-      !orgIntegration ||
+      orgIntegration &&
       orgIntegration.installationId !== input.installationId
     ) {
       throw new ORPCError("UNAUTHORIZED", {
