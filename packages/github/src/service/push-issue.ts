@@ -13,7 +13,7 @@ import { nanoid } from "nanoid"
 import { getInstallationOctokit } from "../client"
 import { ensureLabelsExist, mapBugReportToIssue } from "../issue-mapper"
 
-const DEFAULT_ARTIFACT_URL_TTL_SECONDS = 31_536_000
+const DEFAULT_ARTIFACT_URL_TTL_SECONDS = 604_800
 const TRAILING_SLASH_REGEX = /\/$/
 
 export type PushIssueResult = {

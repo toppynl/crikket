@@ -186,7 +186,7 @@ function renderArtifactsSection(report: BugReportForIssue): string | null {
 
   const table = `| Artifact | Link |\n|---|---|\n| ${captureLabel} | ${captureCell} |\n| Debugger payload | ${debuggerCell} |`
   const note =
-    "_Artifact links use presigned S3 URLs. Links are valid for 1 year by default, or permanently if the bucket is configured with a public URL._"
+    "_Artifact links use presigned S3 URLs. Links are valid for 7 days, or permanently if the bucket is configured with a public URL._"
 
   return `## Artifacts\n\n${table}\n\n${note}`
 }
