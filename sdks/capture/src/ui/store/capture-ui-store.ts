@@ -115,18 +115,6 @@ export function createCaptureUiStore(): CaptureUiStore {
         errorMessage: message,
       })
     },
-    setTitleIfEmpty: (value) => {
-      if (state.reviewDraft.title.trim().length > 0) {
-        return
-      }
-
-      patchState({
-        reviewDraft: {
-          ...state.reviewDraft,
-          title: value.slice(0, 200),
-        },
-      })
-    },
     destroy: () => {
       state = createInitialState()
       listeners.clear()

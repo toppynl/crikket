@@ -66,7 +66,6 @@ export interface CaptureUiStore {
   }) => void
   showSuccess: (shareUrl?: string) => void
   showError: (message: string) => void
-  setTitleIfEmpty: (value: string) => void
   destroy: () => void
 }
 

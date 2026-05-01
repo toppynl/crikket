@@ -1,6 +1,6 @@
 {
   "name": "@crikket-io/capture",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Embeddable browser capture SDK for collecting bug reports from websites.",
   "license": "AGPL-3.0-only",
   "homepage": "https://crikket.io/docs",
