@@ -10,12 +10,12 @@ import {
 } from "@crikket/ui/components/ui/card"
 import { Checkbox } from "@crikket/ui/components/ui/checkbox"
 import { Field, FieldError, FieldLabel } from "@crikket/ui/components/ui/field"
-import { Input } from "@crikket/ui/components/ui/input"
 import { useForm } from "@tanstack/react-form"
 import { Github } from "lucide-react"
 import { useRouter } from "nextjs-toploader/app"
 import { toast } from "sonner"
 import * as z from "zod"
+import { RepoCombobox } from "@/components/github-repo-combobox"
 import { client } from "@/utils/orpc"
 
 const schema = z.object({
@@ -113,19 +113,11 @@ export function ProjectGithubCard({
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Repository</FieldLabel>
-                    <Input
-                      aria-invalid={isInvalid}
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="my-repo"
+                    <RepoCombobox
+                      installationId={orgInstallationId ?? ""}
+                      onChange={field.handleChange}
                       value={field.state.value}
                     />
-                    <p className="text-muted-foreground text-xs">
-                      Repository name only (e.g. <code>my-repo</code>). The
-                      owner is resolved from your GitHub App installation.
-                    </p>
                     {isInvalid ? (
                       <FieldError errors={field.state.meta.errors} />
                     ) : null}
