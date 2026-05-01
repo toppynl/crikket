@@ -1,7 +1,5 @@
 import { afterAll, beforeAll, beforeEach, mock } from "bun:test"
 import { fileURLToPath } from "node:url"
-import { normalizeDebuggerEvent } from "@crikket/capture-core/debugger/normalize"
-import type { DebuggerEvent } from "@crikket/capture-core/debugger/types"
 
 import type {
   CaptureSubmitRequest,
@@ -231,7 +229,7 @@ mock.module(DEBUGGER_COLLECTOR_PATH, () => ({
   },
 }))
 
-const SESSION_STORAGE_KEY = "__crikketActiveSession"
+const STORAGE_KEY = "__crikketActiveSession"
 const SESSION_VERSION = 1
 const MAX_SESSION_AGE_MS = 5 * 60 * 1000
 
@@ -248,70 +246,43 @@ mock.module(SESSION_STORAGE_PATH, () => ({
     }
 
     try {
-      const raw = sessionStorage.getItem(SESSION_STORAGE_KEY)
+      const raw = sessionStorage.getItem(STORAGE_KEY)
       if (raw === null) return null
 
-      let parsed: unknown
-      try {
-        parsed = JSON.parse(raw)
-      } catch {
-        sessionStorage.removeItem(SESSION_STORAGE_KEY)
-        return null
-      }
+      const record = JSON.parse(raw) as Record<string, unknown>
 
       if (
-        typeof parsed !== "object" ||
-        parsed === null ||
-        Array.isArray(parsed)
+        record.version !== SESSION_VERSION ||
+        typeof record.savedAt !== "number" ||
+        Date.now() - record.savedAt > MAX_SESSION_AGE_MS ||
+        typeof record.sessionId !== "string" ||
+        !record.sessionId ||
+        (record.captureType !== "video" && record.captureType !== "screenshot") ||
+        typeof record.startedAt !== "number"
       ) {
-        sessionStorage.removeItem(SESSION_STORAGE_KEY)
+        sessionStorage.removeItem(STORAGE_KEY)
         return null
       }
-
-      const record = parsed as Record<string, unknown>
-
-      if (record.version !== SESSION_VERSION) {
-        sessionStorage.removeItem(SESSION_STORAGE_KEY)
-        return null
-      }
-
-      const savedAt = record.savedAt
-      if (
-        typeof savedAt !== "number" ||
-        !Number.isFinite(savedAt) ||
-        Date.now() - savedAt > MAX_SESSION_AGE_MS
-      ) {
-        sessionStorage.removeItem(SESSION_STORAGE_KEY)
-        return null
-      }
-
-      const { sessionId, captureType, startedAt, recordingStartedAt, events } =
-        record
-
-      if (
-        typeof sessionId !== "string" ||
-        !sessionId ||
-        (captureType !== "video" && captureType !== "screenshot") ||
-        typeof startedAt !== "number" ||
-        !Number.isFinite(startedAt)
-      ) {
-        sessionStorage.removeItem(SESSION_STORAGE_KEY)
-        return null
-      }
-
-      const normalizedEvents: DebuggerEvent[] = Array.isArray(events)
-        ? events
-            .map((e) => normalizeDebuggerEvent(e))
-            .filter((e): e is DebuggerEvent => e !== null)
-        : []
 
       return {
-        sessionId,
-        captureType,
-        startedAt,
+        sessionId: record.sessionId as string,
+        captureType: record.captureType as "video" | "screenshot",
+        startedAt: record.startedAt as number,
         recordingStartedAt:
-          typeof recordingStartedAt === "number" ? recordingStartedAt : null,
-        events: normalizedEvents,
+          typeof record.recordingStartedAt === "number"
+            ? record.recordingStartedAt
+            : null,
+        events: Array.isArray(record.events)
+          ? (record.events as unknown[]).filter(
+              (e): e is { kind: string } =>
+                typeof e === "object" &&
+                e !== null &&
+                typeof (e as Record<string, unknown>).kind === "string" &&
+                ["action", "console", "network"].includes(
+                  (e as Record<string, unknown>).kind as string
+                )
+            )
+          : [],
       }
     } catch {
       return null
@@ -326,22 +297,14 @@ mock.module(SESSION_STORAGE_PATH, () => ({
   }) => {
     try {
       sessionStorage.setItem(
-        SESSION_STORAGE_KEY,
-        JSON.stringify({
-          version: SESSION_VERSION,
-          sessionId: session.sessionId,
-          captureType: session.captureType,
-          startedAt: session.startedAt,
-          recordingStartedAt: session.recordingStartedAt,
-          events: session.events,
-          savedAt: Date.now(),
-        })
+        STORAGE_KEY,
+        JSON.stringify({ ...session, version: SESSION_VERSION, savedAt: Date.now() })
       )
     } catch {}
   },
   clearPersistedSession: () => {
     try {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY)
+      sessionStorage.removeItem(STORAGE_KEY)
     } catch {}
   },
 }))
