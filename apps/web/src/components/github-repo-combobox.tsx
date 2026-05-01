@@ -14,8 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@crikket/ui/components/ui/popover"
-import { cn } from "@crikket/ui/lib/utils"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { ChevronsUpDown } from "lucide-react"
 import * as React from "react"
 import { client } from "@/utils/orpc"
 
@@ -53,21 +52,16 @@ export function RepoCombobox({
       <PopoverTrigger
         render={
           <Button
-            aria-expanded={open}
             className="w-full justify-between font-normal"
             disabled={disabled || loading}
             variant="outline"
-          >
-            {value ||
-              (loading ? "Loading repositories…" : "Select repository…")}
-            <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-          </Button>
+          />
         }
-      />
-      <PopoverContent
-        align="start"
-        className="w-[--radix-popover-trigger-width] p-0"
       >
+        {value || (loading ? "Loading repositories…" : "Select repository…")}
+        <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-(--anchor-width) p-0">
         <Command>
           <CommandInput placeholder="Search repositories…" />
           <CommandList>
@@ -75,19 +69,14 @@ export function RepoCombobox({
             <CommandGroup>
               {repos.map((repo) => (
                 <CommandItem
-                  key={repo.name}
-                  onSelect={(selected) => {
-                    onChange(selected)
+                  data-checked={value === repo.name}
+                  key={`${repo.owner}/${repo.name}`}
+                  onSelect={() => {
+                    onChange(repo.name)
                     setOpen(false)
                   }}
                   value={repo.name}
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 size-4",
-                      value === repo.name ? "opacity-100" : "opacity-0"
-                    )}
-                  />
                   <span className="mr-1 text-muted-foreground">
                     {repo.owner}/
                   </span>
