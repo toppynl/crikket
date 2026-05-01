@@ -13,7 +13,7 @@ import {
   normalizeSubmitPath,
   normalizeZIndex,
 } from "../utils"
-import { CaptureSdkRuntime, createNoopController } from "./capture-runtime"
+import { CaptureSdkRuntime } from "./capture-runtime"
 
 type MountedCaptureLauncher = ReturnType<typeof mountCaptureLauncher>
 
@@ -28,9 +28,12 @@ export class LazyCaptureSdkRuntime implements CaptureRuntimeController {
   private lifecycleVersion = 0
 
   init(options: CaptureInitOptions): CaptureRuntimeController {
-    const key = normalizeKey(options.key)
-    if (!key) {
-      return createNoopController()
+    let key: string
+    try {
+      key = normalizeKey(options.key)
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error))
+      return this
     }
 
     const runtimeConfig: CaptureRuntimeConfig = {

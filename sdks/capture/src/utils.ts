@@ -8,10 +8,9 @@ import type { BridgePayload } from "./types"
 
 export function normalizeKey(value: unknown): string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    console.error(
-      "[crikket] init() called without a valid `key`. Pass your capture key: CrikketCapture.init({ key: '...' })"
+    throw new Error(
+      "[crikket] init() requires a non-empty `key`. Usage: CrikketCapture.init({ key: 'crk_...' })"
     )
-    return ""
   }
 
   return value.trim()
