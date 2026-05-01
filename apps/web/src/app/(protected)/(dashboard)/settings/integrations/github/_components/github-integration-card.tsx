@@ -8,15 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@crikket/ui/components/ui/card"
-import { Field, FieldError, FieldLabel } from "@crikket/ui/components/ui/field"
-import { Input } from "@crikket/ui/components/ui/input"
 import { Checkbox } from "@crikket/ui/components/ui/checkbox"
+import { Field, FieldError, FieldLabel } from "@crikket/ui/components/ui/field"
 import { useForm } from "@tanstack/react-form"
 import { Github } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useRouter } from "nextjs-toploader/app"
 import { toast } from "sonner"
 import * as z from "zod"
+import { RepoCombobox } from "@/components/github-repo-combobox"
 import { client } from "@/utils/orpc"
 
 const githubIntegrationFormSchema = z.object({
@@ -153,19 +153,11 @@ export function GitHubIntegrationCard({
                     <FieldLabel htmlFor={field.name}>
                       Default repository
                     </FieldLabel>
-                    <Input
-                      aria-invalid={isInvalid}
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="my-repo"
+                    <RepoCombobox
+                      installationId={form.getFieldValue("installationId")}
+                      onChange={field.handleChange}
                       value={field.state.value}
                     />
-                    <p className="text-muted-foreground text-xs">
-                      Repository name only (e.g. <code>my-repo</code>). The
-                      owner is resolved from your GitHub App installation.
-                    </p>
                     {isInvalid ? (
                       <FieldError errors={field.state.meta.errors} />
                     ) : null}
