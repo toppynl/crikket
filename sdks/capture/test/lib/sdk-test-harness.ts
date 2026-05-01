@@ -321,6 +321,7 @@ export function setupCaptureSdkTestHooks(): void {
   })
 
   afterAll(() => {
+    resetSdkTestState()
     captureModule?.destroy()
     mock.restore()
   })
