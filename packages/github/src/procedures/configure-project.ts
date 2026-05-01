@@ -1,3 +1,4 @@
+import { getProjectById } from "@crikket/bug-reports/lib/project"
 import { ORPCError } from "@orpc/server"
 import { z } from "zod"
 import {
@@ -19,6 +20,13 @@ export const configureProjectGithub = protectedProcedure
   .handler(async ({ context, input }) => {
     const organizationId = await requireActiveOrgAdmin(context.session)
     try {
+      const project = await getProjectById({
+        id: input.projectId,
+        organizationId,
+      })
+      if (!project) {
+        throw new ORPCError("NOT_FOUND", { message: "Project not found." })
+      }
       return await upsertProjectGithubConfig({
         projectId: input.projectId,
         organizationId,
@@ -27,6 +35,7 @@ export const configureProjectGithub = protectedProcedure
         autoSync: input.autoSync,
       })
     } catch (error) {
+      if (error instanceof ORPCError) throw error
       throw new ORPCError("BAD_REQUEST", {
         message:
           error instanceof Error
