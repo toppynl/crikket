@@ -14,14 +14,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@crikket/ui/components/ui/sidebar"
-import {
-  BookOpen,
-  Building2,
-  CreditCard,
-  KeyRound,
-  UserRound,
-  Video,
-} from "lucide-react"
+import { BookOpen, Settings, Video } from "lucide-react"
 import type { Route } from "next"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -49,24 +42,9 @@ const navPrimary = [
 
 const navSettings = [
   {
-    title: "User",
-    url: "/settings/user" as const,
-    icon: UserRound,
-  },
-  {
-    title: "Organization",
-    url: "/settings/organization" as const,
-    icon: Building2,
-  },
-  {
-    title: "Public Keys",
-    url: "/settings/keys" as const,
-    icon: KeyRound,
-  },
-  {
-    title: "Billing",
-    url: "/settings/billing" as const,
-    icon: CreditCard,
+    title: "Settings",
+    url: "/settings" as const,
+    icon: Settings,
   },
 ] as const
 
