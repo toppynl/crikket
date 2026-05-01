@@ -1,5 +1,6 @@
 "use client"
 
+import type { ProjectRecord } from "@crikket/bug-reports/lib/project"
 import { Button } from "@crikket/ui/components/ui/button"
 import {
   Card,
@@ -14,13 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@crikket/ui/components/ui/dialog"
-import { Plus } from "lucide-react"
-import * as React from "react"
-import { client } from "@/utils/orpc"
+import { ChevronRight, Plus } from "lucide-react"
+import Link from "next/link"
 import { useRouter } from "nextjs-toploader/app"
+import * as React from "react"
 import { toast } from "sonner"
+import { client } from "@/utils/orpc"
 import { ProjectForm } from "./project-form"
-import type { ProjectRecord } from "@crikket/bug-reports/lib/project"
 
 interface Props {
   canManage: boolean
@@ -94,15 +95,22 @@ export function ProjectsManagement({ canManage, initialProjects }: Props) {
             <ul className="divide-y">
               {projects.map((p) => (
                 <li
-                  key={p.id}
                   className="flex items-center justify-between py-3"
+                  key={p.id}
                 >
-                  <div>
-                    <p className="font-medium text-sm">{p.name}</p>
-                    <p className="text-muted-foreground text-xs">{p.slug}</p>
-                  </div>
+                  <Link
+                    className="group flex flex-1 items-center justify-between rounded-lg pr-2 hover:text-foreground"
+                    href={`/settings/projects/${p.id}`}
+                  >
+                    <div>
+                      <p className="font-medium text-sm">{p.name}</p>
+                      <p className="text-muted-foreground text-xs">{p.slug}</p>
+                    </div>
+                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground" />
+                  </Link>
                   {canManage && (
                     <Button
+                      className="ml-2 shrink-0"
                       onClick={() => handleDelete(p.id)}
                       size="sm"
                       type="button"
