@@ -20,12 +20,21 @@ export const listRepos = protectedProcedure
       })
     }
 
-    const octokit = await getInstallationOctokit(input.installationId)
-    const { data } = await octokit.request("GET /installation/repositories", {
-      per_page: 100,
-    })
-    return data.repositories.map((r) => ({
-      owner: r.owner.login,
-      name: r.name,
-    }))
+    try {
+      const octokit = await getInstallationOctokit(input.installationId)
+      const { data } = await octokit.request(
+        "GET /installation/repositories",
+        { per_page: 100 }
+      )
+      return data.repositories.map((r) => ({
+        owner: r.owner.login,
+        name: r.name,
+      }))
+    } catch (error) {
+      console.error("[listRepos] error:", error)
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message:
+          error instanceof Error ? error.message : "Failed to list repositories",
+      })
+    }
   })

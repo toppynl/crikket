@@ -1,7 +1,22 @@
+import { createPrivateKey } from "node:crypto"
 import { env } from "@crikket/env/server"
 import { App } from "@octokit/app"
 
 let _app: App | null = null
+
+function decodePrivateKey(rawKey: string): string {
+  // Support both raw PEM and base64-encoded PEM
+  let pem = rawKey.includes("-----BEGIN")
+    ? rawKey
+    : Buffer.from(rawKey, "base64").toString("utf8")
+  // Normalize escaped newlines (common when set via env vars or wrangler secrets)
+  pem = pem.replace(/\\n/g, "\n")
+  // CF Workers WebCrypto only supports PKCS#8; convert PKCS#1 if needed
+  if (pem.includes("-----BEGIN RSA PRIVATE KEY-----")) {
+    return createPrivateKey(pem).export({ type: "pkcs8", format: "pem" }) as string
+  }
+  return pem
+}
 
 function getApp(): App {
   if (_app) return _app
@@ -12,9 +27,7 @@ function getApp(): App {
   }
   _app = new App({
     appId: env.GITHUB_APP_ID,
-    privateKey: Buffer.from(env.GITHUB_APP_PRIVATE_KEY, "base64").toString(
-      "utf8"
-    ),
+    privateKey: decodePrivateKey(env.GITHUB_APP_PRIVATE_KEY),
   })
   return _app
 }
