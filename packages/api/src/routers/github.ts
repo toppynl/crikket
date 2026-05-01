@@ -7,6 +7,7 @@ import {
   deleteProjectGithubConfigProcedure,
 } from "@crikket/github/procedures/configure-project"
 import { getProjectGithubConfigProcedure } from "@crikket/github/procedures/get-project-config"
+import { listRepos } from "@crikket/github/procedures/list-repos"
 
 export const githubRouter = {
   configure,
@@ -16,4 +17,5 @@ export const githubRouter = {
   configureProject: configureProjectGithub,
   deleteProjectConfig: deleteProjectGithubConfigProcedure,
   getProjectConfig: getProjectGithubConfigProcedure,
+  listRepos,
 }
