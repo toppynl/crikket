@@ -56,12 +56,16 @@ export interface DashboardFilters {
   statuses: BugReportStatus[]
   priorities: Priority[]
   visibilities: BugReportVisibility[]
+  projectId: string | null
+  tagIds: string[]
 }
 
 export const EMPTY_FILTERS: DashboardFilters = {
   statuses: [],
   priorities: [],
   visibilities: [],
+  projectId: null,
+  tagIds: [],
 }
 
 export function formatStatusLabel(status: BugReportStatus): string {

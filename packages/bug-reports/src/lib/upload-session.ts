@@ -30,6 +30,7 @@ import {
   queueBugReportIngestionJob,
 } from "./ingestion-jobs"
 import { getStorageProvider } from "./storage"
+import { resolveTagsByName, setBugReportTags } from "./tag"
 import {
   captureContextInputSchema,
   endUserInputSchema,
@@ -370,6 +371,13 @@ export async function finalizeBugReportUpload(input: {
       .where(eq(bugReportUploadSession.id, uploadSession.id))
   })
 
+  // Convert any free-text tags carried by the SDK submission into managed tags.
+  await applyUploadSessionManagedTags({
+    bugReportId: uploadSession.id,
+    organizationId: uploadSession.organizationId,
+    tags: uploadSession.tags,
+  })
+
   const debuggerPersistence = uploadSession.debuggerKey
     ? await finalizeBugReportDebuggerIngestion({
         bugReportId: uploadSession.id,
@@ -407,6 +415,25 @@ export async function finalizeBugReportUpload(input: {
     warnings,
     debugger: debuggerPersistence,
   }
+}
+
+async function applyUploadSessionManagedTags(input: {
+  bugReportId: string
+  organizationId: string
+  tags: string[] | null
+}): Promise<void> {
+  if (!input.tags || input.tags.length === 0) {
+    return
+  }
+  const tagIds = await resolveTagsByName({
+    organizationId: input.organizationId,
+    names: input.tags,
+  })
+  await setBugReportTags({
+    bugReportId: input.bugReportId,
+    organizationId: input.organizationId,
+    tagIds,
+  })
 }
 
 async function finalizeBugReportDebuggerIngestion(input: {

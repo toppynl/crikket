@@ -15,7 +15,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@crikket/ui/components/ui/dialog"
-import { Input } from "@crikket/ui/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -26,6 +25,7 @@ import {
 import { SlidersHorizontal, Trash2 } from "lucide-react"
 import { useState } from "react"
 
+import { TagMultiSelect } from "@/components/bug-reports/tag-multi-select"
 import {
   formatPriorityLabel,
   formatStatusLabel,
@@ -39,12 +39,12 @@ interface BugReportsBulkActionsProps {
   bulkStatus: BugReportStatus | ""
   bulkPriority: Priority | ""
   bulkVisibility: BugReportVisibility | ""
-  bulkTagsInput: string
+  bulkTagIds: string[]
   isMutating: boolean
   onBulkStatusChange: (value: BugReportStatus | "") => void
   onBulkPriorityChange: (value: Priority | "") => void
   onBulkVisibilityChange: (value: BugReportVisibility | "") => void
-  onBulkTagsChange: (value: string) => void
+  onBulkTagsChange: (value: string[]) => void
   onApplyUpdates: () => Promise<void>
   onRequestBulkDelete: () => void
 }
@@ -53,7 +53,7 @@ export function BugReportsBulkActions({
   bulkStatus,
   bulkPriority,
   bulkVisibility,
-  bulkTagsInput,
+  bulkTagIds,
   isMutating,
   onBulkStatusChange,
   onBulkPriorityChange,
@@ -75,7 +75,7 @@ export function BugReportsBulkActions({
     Boolean(bulkStatus) ||
     Boolean(bulkPriority) ||
     Boolean(bulkVisibility) ||
-    bulkTagsInput.trim().length > 0
+    bulkTagIds.length > 0
 
   return (
     <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
@@ -153,12 +153,13 @@ export function BugReportsBulkActions({
               </SelectContent>
             </Select>
 
-            <Input
-              className="sm:col-span-2"
-              onChange={(event) => onBulkTagsChange(event.target.value)}
-              placeholder="Tags (comma-separated)"
-              value={bulkTagsInput}
-            />
+            <div className="sm:col-span-2">
+              <TagMultiSelect
+                onChange={onBulkTagsChange}
+                placeholder="Add tags to selected reports"
+                selectedIds={bulkTagIds}
+              />
+            </div>
           </div>
 
           <DialogFooter>

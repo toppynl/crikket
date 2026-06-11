@@ -11,6 +11,13 @@ import { Button } from "@crikket/ui/components/ui/button"
 import { Card, CardContent } from "@crikket/ui/components/ui/card"
 import { Checkbox } from "@crikket/ui/components/ui/checkbox"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@crikket/ui/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -46,7 +53,9 @@ import {
   useState,
 } from "react"
 import { toast } from "sonner"
+import { BugReportTagsField } from "@/components/bug-reports/bug-report-tags-field"
 import { EditBugReportSheet } from "@/components/bug-reports/edit-bug-report-sheet"
+import { TagBadge } from "@/components/bug-reports/tag-badge"
 import { client } from "@/utils/orpc"
 
 import {
@@ -85,6 +94,7 @@ export function BugReportCard({
       BUG_REPORT_DEBUGGER_INGESTION_STATUS_OPTIONS.failed &&
     report.submissionStatus === BUG_REPORT_SUBMISSION_STATUS_OPTIONS.failed
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false)
+  const [isTagsOpen, setIsTagsOpen] = useState(false)
   const [githubIssueUrl, setGithubIssueUrl] = useState<string | null>(
     report.githubIssueUrl ?? null
   )
@@ -211,6 +221,10 @@ export function BugReportCard({
                   <Edit3 className="size-4" />
                   Edit report
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsTagsOpen(true)}>
+                  <Tag className="size-4" />
+                  Edit tags
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {githubIssueUrl ? (
                   <DropdownMenuItem
@@ -297,10 +311,7 @@ export function BugReportCard({
               <Chip>Debugger ingest failed</Chip>
             ) : null}
             {report.tags.slice(0, 2).map((tag) => (
-              <Chip key={tag}>
-                <Tag className="size-3" />
-                {tag}
-              </Chip>
+              <TagBadge key={tag.id} tag={tag} withDot />
             ))}
             {report.tags.length > 2 ? (
               <Chip>+{report.tags.length - 2}</Chip>
@@ -327,6 +338,21 @@ export function BugReportCard({
           visibility: report.visibility,
         }}
       />
+      <Dialog onOpenChange={setIsTagsOpen} open={isTagsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit tags</DialogTitle>
+            <DialogDescription>
+              Add or remove tags for &ldquo;{report.title}&rdquo;.
+            </DialogDescription>
+          </DialogHeader>
+          <BugReportTagsField
+            onUpdated={onReportUpdated}
+            reportId={report.id}
+            tags={report.tags}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

@@ -4,9 +4,15 @@ import {
   PRIORITY_OPTIONS,
   type Priority,
 } from "@crikket/shared/constants/priorities"
+import { MAX_TAGS_PER_REPORT } from "@crikket/shared/constants/tag"
 import { ORPCError } from "@orpc/server"
 import { and, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
+import {
+  getTagsForBugReport,
+  setBugReportTags,
+  setBugReportTagsForMany,
+} from "../lib/tag"
 import {
   isStatus,
   isVisibility,
@@ -15,14 +21,14 @@ import {
   visibilityValues,
 } from "../lib/utils"
 import { protectedProcedure } from "./context"
-import { normalizeTags, requireActiveOrgId } from "./helpers"
+import { requireActiveOrgId } from "./helpers"
 
 const priorityValues = Object.values(PRIORITY_OPTIONS) as [
   Priority,
   ...Priority[],
 ]
 
-const tagsInputSchema = z.array(z.string().trim().min(1).max(40)).max(20)
+const tagIdsInputSchema = z.array(z.string().min(1)).max(MAX_TAGS_PER_REPORT)
 
 const bugReportUpdateInputSchema = z
   .object({
@@ -31,7 +37,7 @@ const bugReportUpdateInputSchema = z
     status: z.enum(statusValues).optional(),
     priority: z.enum(priorityValues).optional(),
     visibility: z.enum(visibilityValues).optional(),
-    tags: tagsInputSchema.optional(),
+    tagIds: tagIdsInputSchema.optional(),
   })
   .superRefine((value, ctx) => {
     if (
@@ -39,7 +45,7 @@ const bugReportUpdateInputSchema = z
       value.status === undefined &&
       value.priority === undefined &&
       value.visibility === undefined &&
-      value.tags === undefined
+      value.tagIds === undefined
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -54,14 +60,14 @@ const bugReportBulkUpdateInputSchema = z
     status: z.enum(statusValues).optional(),
     priority: z.enum(priorityValues).optional(),
     visibility: z.enum(visibilityValues).optional(),
-    tags: tagsInputSchema.optional(),
+    tagIds: tagIdsInputSchema.optional(),
   })
   .superRefine((value, ctx) => {
     if (
       value.status === undefined &&
       value.priority === undefined &&
       value.visibility === undefined &&
-      value.tags === undefined
+      value.tagIds === undefined
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -70,19 +76,17 @@ const bugReportBulkUpdateInputSchema = z
     }
   })
 
-function buildUpdateValues(input: {
+function buildScalarUpdateValues(input: {
   title?: string
   status?: (typeof statusValues)[number]
   priority?: Priority
   visibility?: (typeof visibilityValues)[number]
-  tags?: string[]
 }) {
   const values: {
     title?: string
     status?: string
     priority?: string
     visibility?: string
-    tags?: string[]
   } = {}
 
   if (input.title !== undefined) {
@@ -101,10 +105,6 @@ function buildUpdateValues(input: {
     values.visibility = input.visibility
   }
 
-  if (input.tags !== undefined) {
-    values.tags = normalizeTags(input.tags) ?? []
-  }
-
   return values
 }
 
@@ -112,30 +112,67 @@ export const updateBugReport = protectedProcedure
   .input(bugReportUpdateInputSchema)
   .handler(async ({ context, input }) => {
     const activeOrgId = requireActiveOrgId(context.session)
-    const values = buildUpdateValues(input)
+    const values = buildScalarUpdateValues(input)
 
-    const updated = await db
-      .update(bugReport)
-      .set(values)
-      .where(
-        and(
+    const returningColumns = {
+      id: bugReport.id,
+      title: bugReport.title,
+      status: bugReport.status,
+      priority: bugReport.priority,
+      visibility: bugReport.visibility,
+    }
+
+    let report:
+      | {
+          id: string
+          title: string | null
+          status: string
+          priority: string
+          visibility: string
+        }
+      | undefined
+
+    if (Object.keys(values).length > 0) {
+      const updated = await db
+        .update(bugReport)
+        .set(values)
+        .where(
+          and(
+            eq(bugReport.id, input.id),
+            eq(bugReport.organizationId, activeOrgId)
+          )
+        )
+        .returning(returningColumns)
+      report = updated[0]
+    } else {
+      report = await db.query.bugReport.findFirst({
+        where: and(
           eq(bugReport.id, input.id),
           eq(bugReport.organizationId, activeOrgId)
-        )
-      )
-      .returning({
-        id: bugReport.id,
-        title: bugReport.title,
-        status: bugReport.status,
-        priority: bugReport.priority,
-        visibility: bugReport.visibility,
-        tags: bugReport.tags,
+        ),
+        columns: {
+          id: true,
+          title: true,
+          status: true,
+          priority: true,
+          visibility: true,
+        },
       })
+    }
 
-    const report = updated[0]
     if (!report) {
       throw new ORPCError("NOT_FOUND", { message: "Bug report not found" })
     }
+
+    if (input.tagIds !== undefined) {
+      await setBugReportTags({
+        bugReportId: input.id,
+        organizationId: activeOrgId,
+        tagIds: input.tagIds,
+      })
+    }
+
+    const tags = await getTagsForBugReport(report.id)
 
     return {
       id: report.id,
@@ -147,7 +184,11 @@ export const updateBugReport = protectedProcedure
       visibility: isVisibility(report.visibility)
         ? report.visibility
         : visibilityValues[1],
-      tags: Array.isArray(report.tags) ? report.tags : [],
+      tags: tags.map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+        color: tag.color,
+      })),
     }
   })
 
@@ -155,23 +196,44 @@ export const updateBugReportsBulk = protectedProcedure
   .input(bugReportBulkUpdateInputSchema)
   .handler(async ({ context, input }) => {
     const activeOrgId = requireActiveOrgId(context.session)
-    const values = buildUpdateValues(input)
+    const values = buildScalarUpdateValues(input)
     const uniqueIds = Array.from(new Set(input.ids))
 
-    const updated = await db
-      .update(bugReport)
-      .set(values)
-      .where(
-        and(
+    let updatedIds: string[]
+    if (Object.keys(values).length > 0) {
+      const updated = await db
+        .update(bugReport)
+        .set(values)
+        .where(
+          and(
+            eq(bugReport.organizationId, activeOrgId),
+            inArray(bugReport.id, uniqueIds)
+          )
+        )
+        .returning({ id: bugReport.id })
+      updatedIds = updated.map((row) => row.id)
+    } else {
+      const rows = await db.query.bugReport.findMany({
+        where: and(
           eq(bugReport.organizationId, activeOrgId),
           inArray(bugReport.id, uniqueIds)
-        )
-      )
-      .returning({ id: bugReport.id })
+        ),
+        columns: { id: true },
+      })
+      updatedIds = rows.map((row) => row.id)
+    }
+
+    if (input.tagIds !== undefined && updatedIds.length > 0) {
+      await setBugReportTagsForMany({
+        bugReportIds: updatedIds,
+        organizationId: activeOrgId,
+        tagIds: input.tagIds,
+      })
+    }
 
     return {
-      updatedCount: updated.length,
-      ids: updated.map((row) => row.id),
+      updatedCount: updatedIds.length,
+      ids: updatedIds,
     }
   })
 

@@ -5,6 +5,7 @@ import {
   Github,
   KeyRound,
   type LucideIcon,
+  Tag,
   UserRound,
 } from "lucide-react"
 import type { Route } from "next"
@@ -40,6 +41,12 @@ export const SETTINGS_NAV: SettingsNavItem[] = [
     title: "Projects",
     description: "Manage projects and integrations",
     icon: FolderOpen,
+  },
+  {
+    href: "/settings/tags" as Route,
+    title: "Tags",
+    description: "Reusable labels for bug reports",
+    icon: Tag,
   },
   {
     href: "/settings/keys" as Route,

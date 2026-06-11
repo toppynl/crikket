@@ -1,6 +1,7 @@
 import { db } from "@crikket/db"
 import { bugReport } from "@crikket/db/schema/bug-report"
 import { githubIssueLink } from "@crikket/db/schema/github"
+import { bugReportTag } from "@crikket/db/schema/tag"
 import {
   BUG_REPORT_DEBUGGER_INGESTION_STATUS_OPTIONS,
   BUG_REPORT_SORT_OPTIONS,
@@ -17,9 +18,21 @@ import {
   buildPaginationMeta,
   type PaginatedResult,
 } from "@crikket/shared/lib/server/pagination"
-import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  exists,
+  ilike,
+  inArray,
+  or,
+  sql,
+} from "drizzle-orm"
 import { z } from "zod"
 import { isExpiringSignedUrl, resolveCaptureUrl } from "../lib/storage"
+import { getTagsForBugReports, type TagRecord } from "../lib/tag"
 import {
   formatDurationMs,
   isAttachmentType,
@@ -43,6 +56,12 @@ const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 12
 const MAX_PAGE_SIZE = 50
 
+export interface BugReportTagSummary {
+  id: string
+  name: string
+  color: string
+}
+
 export interface BugReportListItem {
   id: string
   title: string
@@ -61,11 +80,15 @@ export interface BugReportListItem {
   debuggerIngestionStatus: BugReportDebuggerIngestionStatus
   debuggerIngestionError: string | undefined
   priority: Priority
-  tags: string[]
+  tags: BugReportTagSummary[]
   url: string | undefined
   githubIssueUrl: string | undefined
   createdAt: string
   updatedAt: string
+}
+
+function toTagSummary(tag: TagRecord): BugReportTagSummary {
+  return { id: tag.id, name: tag.name, color: tag.color }
 }
 
 export interface BugReportDashboardStats {
@@ -100,6 +123,7 @@ const listBugReportsInputSchema = z
       .max(visibilityValues.length)
       .optional(),
     projectId: z.string().optional(),
+    tagIds: z.array(z.string().min(1)).max(50).optional(),
     sort: z.enum(sortValues).default(BUG_REPORT_SORT_OPTIONS.newest),
   })
   .optional()
@@ -187,7 +211,7 @@ interface BugReportListRecord {
   visibility: string
   status: string
   priority: string
-  tags: string[] | null
+  tags: BugReportTagSummary[]
   url: string | null
   githubIssueUrl: string | undefined
   createdAt: Date
@@ -257,7 +281,7 @@ async function mapBugReportListItem(
         : BUG_REPORT_DEBUGGER_INGESTION_STATUS_OPTIONS.completed,
     debuggerIngestionError: report.debuggerIngestionError ?? undefined,
     priority: normalizePriority(report.priority),
-    tags: Array.isArray(report.tags) ? report.tags : [],
+    tags: report.tags,
     url: report.url ?? undefined,
     githubIssueUrl: report.githubIssueUrl,
     uploader,
@@ -309,6 +333,23 @@ export const listBugReports = protectedProcedure
         filters.push(eq(bugReport.projectId, input.projectId))
       }
 
+      if (input?.tagIds && input.tagIds.length > 0) {
+        const tagIds = Array.from(new Set(input.tagIds))
+        filters.push(
+          exists(
+            db
+              .select({ one: sql`1` })
+              .from(bugReportTag)
+              .where(
+                and(
+                  eq(bugReportTag.bugReportId, bugReport.id),
+                  inArray(bugReportTag.tagId, tagIds)
+                )
+              )
+          )
+        )
+      }
+
       const whereClause =
         filters.length === 1 ? filters[0] : (and(...filters) ?? filters[0])
       const orderBy = buildOrderBy(
@@ -346,12 +387,15 @@ export const listBugReports = protectedProcedure
         githubLinks.map((l) => [l.bugReportId, l.issueUrl])
       )
 
+      const tagsMap = await getTagsForBugReports(bugReportIds)
+
       const items = await Promise.all(
         bugReports.map((report) =>
           mapBugReportListItem({
             ...report,
             githubIssueUrl: githubLinkMap.get(report.id),
-          } as BugReportListRecord)
+            tags: (tagsMap.get(report.id) ?? []).map(toTagSummary),
+          } as unknown as BugReportListRecord)
         )
       )
 

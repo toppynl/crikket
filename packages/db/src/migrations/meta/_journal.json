@@ -36,6 +36,13 @@
       "when": 1781163809698,
       "tag": "0004_hard_darwin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781172738430,
+      "tag": "0005_moaning_moon_knight",
+      "breakpoints": true
     }
   ]
 }

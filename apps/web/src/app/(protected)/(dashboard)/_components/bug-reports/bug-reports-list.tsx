@@ -47,8 +47,10 @@ export function BugReportsList() {
       <BugReportsToolbar
         filters={filtersState.filters}
         onClearFilters={filtersState.clearFilters}
+        onProjectChange={filtersState.setProjectId}
         onSearchChange={filtersState.setSearchValue}
         onSortChange={filtersState.setSort}
+        onTagsChange={filtersState.setTagIds}
         onTogglePriority={filtersState.togglePriority}
         onToggleStatus={filtersState.toggleStatus}
         onToggleVisibility={filtersState.toggleVisibility}
@@ -62,13 +64,13 @@ export function BugReportsList() {
           <BugReportsBulkActions
             bulkPriority={actionsState.bulkPriority}
             bulkStatus={actionsState.bulkStatus}
-            bulkTagsInput={actionsState.bulkTagsInput}
+            bulkTagIds={actionsState.bulkTagIds}
             bulkVisibility={actionsState.bulkVisibility}
             isMutating={actionsState.isMutating}
             onApplyUpdates={actionsState.handleBulkUpdate}
             onBulkPriorityChange={actionsState.setBulkPriority}
             onBulkStatusChange={actionsState.setBulkStatus}
-            onBulkTagsChange={actionsState.setBulkTagsInput}
+            onBulkTagsChange={actionsState.setBulkTagIds}
             onBulkVisibilityChange={actionsState.setBulkVisibility}
             onRequestBulkDelete={() => actionsState.setBulkDeleteOpen(true)}
           />
