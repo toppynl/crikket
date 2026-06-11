@@ -386,8 +386,9 @@ async function ingestDebuggerPayload(input: {
 }): Promise<PersistBugReportDebuggerDataResult> {
   const storage = getStorageProvider()
   const storedPayload = await storage.read(input.debuggerKey)
+  const isGzip = storedPayload[0] === 0x1f && storedPayload[1] === 0x8b
   const payloadBuffer =
-    input.debuggerContentEncoding === "gzip"
+    input.debuggerContentEncoding === "gzip" && isGzip
       ? await decompressGzip(storedPayload)
       : storedPayload
   const rawPayload = JSON.parse(new TextDecoder().decode(payloadBuffer)) as {
