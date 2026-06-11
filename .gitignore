@@ -62,3 +62,6 @@ AGENTS.md
 
 # Local deployment configs (never committed)
 /deploy/
+
+# Cloudflare Wrangler local state
+.wrangler/
