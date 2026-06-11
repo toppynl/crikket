@@ -41,7 +41,8 @@ export async function upsertProjectGithubConfig(input: {
   const details = await getInstallationDetails(input.installationId)
   const account = details.account as { login?: string } | null | undefined
   const owner = account?.login
-  if (!owner) throw new Error("Could not resolve owner from GitHub installation")
+  if (!owner)
+    throw new Error("Could not resolve owner from GitHub installation")
 
   const [row] = await db
     .insert(projectGithubConfig)

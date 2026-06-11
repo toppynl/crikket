@@ -1,10 +1,5 @@
 import { PAGE_BRIDGE_SOURCE } from "@crikket/capture-core/debugger/constants"
 import {
-  clearPersistedSession,
-  loadPersistedSession,
-  persistSession,
-} from "./session-storage"
-import {
   appendActionEventWithDedup,
   appendEventWithRetentionPolicy,
   appendNetworkEventWithDedup,
@@ -19,6 +14,11 @@ import type { DebuggerEvent } from "@crikket/capture-core/debugger/types"
 import { MAX_RECENT_EVENT_AGE_MS, MAX_RECENT_EVENT_COUNT } from "../constants"
 import type { CaptureType, DebuggerSession, ReviewSnapshot } from "../types"
 import { createSessionId, isBridgePayload } from "../utils"
+import {
+  clearPersistedSession,
+  loadPersistedSession,
+  persistSession,
+} from "./session-storage"
 
 export class DebuggerCollector {
   private installed = false
@@ -96,7 +96,9 @@ export class DebuggerCollector {
     }
 
     window.removeEventListener("message", this.handleWindowMessage)
-    window.removeEventListener("pagehide", this.handlePageHide, { capture: true })
+    window.removeEventListener("pagehide", this.handlePageHide, {
+      capture: true,
+    })
     this.installed = false
   }
 

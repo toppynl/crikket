@@ -171,12 +171,14 @@ function renderContextTable(fields: Record<string, string>): string {
 }
 
 function renderArtifactsSection(report: BugReportForIssue): string | null {
-  if (!report.captureUrl && !report.debuggerUrl) {
+  if (!(report.captureUrl || report.debuggerUrl)) {
     return null
   }
 
   const captureLabel =
-    report.attachmentType === "video" ? "Recording (.webm)" : "Screenshot (.png)"
+    report.attachmentType === "video"
+      ? "Recording (.webm)"
+      : "Screenshot (.png)"
   const captureCell = report.captureUrl
     ? `[${captureLabel}](${report.captureUrl})`
     : "not available"
@@ -191,9 +193,7 @@ function renderArtifactsSection(report: BugReportForIssue): string | null {
   return `## Artifacts\n\n${table}\n\n${note}`
 }
 
-function renderNetworkTable(
-  requests: BugReportNetworkRequest[]
-): string {
+function renderNetworkTable(requests: BugReportNetworkRequest[]): string {
   const header = "| Method | Status | Duration (ms) | URL |\n|---|---|---|---|"
   const rows = requests
     .map(

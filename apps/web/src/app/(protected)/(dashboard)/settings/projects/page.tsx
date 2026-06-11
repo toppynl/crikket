@@ -47,7 +47,5 @@ export default async function ProjectsPage() {
 
   const projects = await client.project.list().catch(() => [])
 
-  return (
-    <ProjectsManagement canManage={canManage} initialProjects={projects} />
-  )
+  return <ProjectsManagement canManage={canManage} initialProjects={projects} />
 }

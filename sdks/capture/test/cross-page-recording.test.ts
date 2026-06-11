@@ -5,7 +5,6 @@ import {
   getCaptureSdk,
   sdkTestState,
   setupCaptureSdkTestHooks,
-  waitFor,
 } from "./lib/sdk-test-harness"
 
 setupCaptureSdkTestHooks()
@@ -52,10 +51,14 @@ describe("cross-page recording resume", () => {
 
     // A session was started (for the screenshot) and finalized
     expect(sdkTestState.startSessionCalls).toHaveLength(1)
-    expect(sdkTestState.startSessionCalls[0]).toMatchObject({ captureType: "screenshot" })
+    expect(sdkTestState.startSessionCalls[0]).toMatchObject({
+      captureType: "screenshot",
+    })
     expect(sdkTestState.finalizeSessionCalls).toBe(1)
     expect(sdkTestState.uiShowReviewInputs).toHaveLength(1)
-    expect(sdkTestState.uiShowReviewInputs[0].media.captureType).toBe("screenshot")
+    expect(sdkTestState.uiShowReviewInputs[0].media.captureType).toBe(
+      "screenshot"
+    )
   })
 
   it("completes a full recording flow after resuming a persisted session", async () => {
@@ -73,7 +76,9 @@ describe("cross-page recording resume", () => {
     const startResult = await capture.startRecording()
     expect(startResult).toEqual({ startedAt: 1_700_000_000_000 })
     expect(sdkTestState.startSessionCalls).toHaveLength(1)
-    expect(sdkTestState.startSessionCalls[0]).toMatchObject({ captureType: "video" })
+    expect(sdkTestState.startSessionCalls[0]).toMatchObject({
+      captureType: "video",
+    })
 
     // User stops the recording
     const recordingBlob = await capture.stopRecording()

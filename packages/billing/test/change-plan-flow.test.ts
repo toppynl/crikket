@@ -86,7 +86,7 @@ mock.module("@crikket/db", () => ({
 }))
 
 mock.module(`${BILLING_SRC}/lib/payments.ts`, () => ({
-  polarClient: {
+  getPolarClient: () => ({
     subscriptions: {
       update: (input: {
         id: string
@@ -106,7 +106,7 @@ mock.module(`${BILLING_SRC}/lib/payments.ts`, () => ({
         )
       },
     },
-  },
+  }),
 }))
 
 mock.module(`${BILLING_SRC}/service/access.ts`, () => ({

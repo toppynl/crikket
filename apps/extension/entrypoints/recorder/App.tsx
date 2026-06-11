@@ -39,7 +39,7 @@ import {
   getDebuggerCaptureSummary,
   getSubmissionErrorMessage,
   isUnauthorizedSubmissionError,
-  normalizeOptionalText,
+  normalizeRequiredText,
 } from "@/lib/recorder-submit"
 import { formatDuration, getDeviceInfo } from "@/lib/utils"
 
@@ -316,9 +316,9 @@ function App() {
       const result = await submitBugReportWithUploads({
         attachment: blob,
         attachmentType: captureType,
-        title: normalizeOptionalText(values.title, 200),
+        title: normalizeRequiredText(values.title, 200),
         priority: values.priority,
-        description: normalizeOptionalText(values.description, 3000),
+        description: normalizeRequiredText(values.description, 3000),
         url: captureContextSubmissionData.normalizedUrl,
         metadata: {
           duration: formatDuration(durationMs),

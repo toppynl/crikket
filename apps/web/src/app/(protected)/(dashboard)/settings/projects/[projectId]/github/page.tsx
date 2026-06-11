@@ -14,8 +14,6 @@ export default async function ProjectGithubPage({
 
   return (
     <ProjectGithubCard
-      projectId={projectId}
-      orgInstallationId={orgConfig?.installationId ?? null}
       currentConfig={
         projectConfig
           ? {
@@ -25,6 +23,8 @@ export default async function ProjectGithubPage({
             }
           : null
       }
+      orgInstallationId={orgConfig?.installationId ?? null}
+      projectId={projectId}
     />
   )
 }

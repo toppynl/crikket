@@ -86,7 +86,9 @@ function createAuth() {
               } as const)
             : null,
         ].filter(
-          (product): product is { productId: string; slug: CheckoutProductSlug } =>
+          (
+            product
+          ): product is { productId: string; slug: CheckoutProductSlug } =>
             Boolean(product)
         )
 

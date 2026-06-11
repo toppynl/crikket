@@ -13,7 +13,10 @@ function decodePrivateKey(rawKey: string): string {
   pem = pem.replace(/\\n/g, "\n")
   // CF Workers WebCrypto only supports PKCS#8; convert PKCS#1 if needed
   if (pem.includes("-----BEGIN RSA PRIVATE KEY-----")) {
-    return createPrivateKey(pem).export({ type: "pkcs8", format: "pem" }) as string
+    return createPrivateKey(pem).export({
+      type: "pkcs8",
+      format: "pem",
+    }) as string
   }
   return pem
 }

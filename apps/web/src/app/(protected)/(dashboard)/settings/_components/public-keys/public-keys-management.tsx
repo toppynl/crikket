@@ -209,10 +209,16 @@ export function PublicKeysManagement({
               deletingKeyId={pendingKeyIds.deleting}
               items={keys}
               onAssignToProject={openAssignDialog}
-              onDelete={async (input) => { await deleteMutation.mutateAsync(input) }}
+              onDelete={async (input) => {
+                await deleteMutation.mutateAsync(input)
+              }}
               onEdit={(item) => setEditingItem(item)}
-              onRevoke={async (input) => { await revokeMutation.mutateAsync(input) }}
-              onRotate={async (input) => { await rotateMutation.mutateAsync(input) }}
+              onRevoke={async (input) => {
+                await revokeMutation.mutateAsync(input)
+              }}
+              onRotate={async (input) => {
+                await rotateMutation.mutateAsync(input)
+              }}
               revokingKeyId={pendingKeyIds.revoking}
               rotatingKeyId={pendingKeyIds.rotating}
             />

@@ -10,8 +10,8 @@ beforeAll(async () => {
 })
 
 describe("extractProviderEventId flow", () => {
-  it("uses provider event id when present", () => {
-    const providerEventId = extractProviderEventId(
+  it("uses provider event id when present", async () => {
+    const providerEventId = await extractProviderEventId(
       {
         id: "evt_123",
         type: "subscription.updated",
@@ -22,7 +22,7 @@ describe("extractProviderEventId flow", () => {
     expect(providerEventId).toBe("polar:event:evt_123")
   })
 
-  it("builds deterministic fallback ids when provider event id is missing", () => {
+  it("builds deterministic fallback ids when provider event id is missing", async () => {
     const payload = {
       type: "subscription.updated",
       data: {
@@ -31,8 +31,8 @@ describe("extractProviderEventId flow", () => {
       },
     }
 
-    const first = extractProviderEventId(payload, "subscription.updated")
-    const second = extractProviderEventId(payload, "subscription.updated")
+    const first = await extractProviderEventId(payload, "subscription.updated")
+    const second = await extractProviderEventId(payload, "subscription.updated")
 
     expect(first).toBe(second)
     expect(
@@ -40,7 +40,7 @@ describe("extractProviderEventId flow", () => {
     ).toBe(true)
   })
 
-  it("keeps fallback id stable when payload keys are reordered", () => {
+  it("keeps fallback id stable when payload keys are reordered", async () => {
     const payloadA = {
       type: "subscription.updated",
       data: {
@@ -64,8 +64,11 @@ describe("extractProviderEventId flow", () => {
       type: "subscription.updated",
     }
 
-    const first = extractProviderEventId(payloadA, "subscription.updated")
-    const second = extractProviderEventId(payloadB, "subscription.updated")
+    const first = await extractProviderEventId(payloadA, "subscription.updated")
+    const second = await extractProviderEventId(
+      payloadB,
+      "subscription.updated"
+    )
 
     expect(first).toBe(second)
   })

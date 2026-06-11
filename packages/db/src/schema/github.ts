@@ -122,7 +122,5 @@ export const projectGithubConfig = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [
-    index("project_github_config_org_idx").on(table.organizationId),
-  ]
+  (table) => [index("project_github_config_org_idx").on(table.organizationId)]
 )

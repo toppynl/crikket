@@ -1,0 +1,11 @@
+/*
+ * Docs-only stylesheet.
+ *
+ * Extends the canonical admin theme (globals.css) with Fumadocs' presets.
+ * Fumadocs tokens are namespaced under `--color-fd-*`, so they do not collide
+ * with the shadcn neutral tokens defined in globals.css. Keep these imports out
+ * of globals.css so the admin app and extension are not themed by Fumadocs.
+ */
+@import "./globals.css";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";

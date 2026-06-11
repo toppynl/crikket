@@ -1,5 +1,5 @@
 import { env } from "@crikket/env/web"
-import "@crikket/ui/styles/globals.css"
+import "@crikket/ui/styles/docs.css"
 import { siteConfig } from "@crikket/shared/config/site"
 import { RootProvider } from "fumadocs-ui/provider/next"
 import type { Metadata } from "next"

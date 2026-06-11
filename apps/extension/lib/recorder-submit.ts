@@ -115,6 +115,18 @@ export function normalizeOptionalText(
   return trimmed.slice(0, maxLength)
 }
 
+/**
+ * Normalize a required field (title, description). Unlike
+ * {@link normalizeOptionalText} this always returns a string, matching the
+ * upload API contract where these fields are mandatory.
+ */
+export function normalizeRequiredText(
+  value: string,
+  maxLength: number
+): string {
+  return value.trim().slice(0, maxLength)
+}
+
 function normalizeOptionalUrl(value: string | undefined): string | undefined {
   const normalized = normalizeOptionalText(value, 4096)
   if (!normalized) {

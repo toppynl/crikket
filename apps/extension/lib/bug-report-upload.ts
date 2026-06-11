@@ -15,7 +15,7 @@ export async function submitBugReportWithUploads(input: {
     logs: number
     networkRequests: number
   }
-  description?: string
+  description: string
   deviceInfo?: {
     browser?: string
     os?: string
@@ -27,7 +27,7 @@ export async function submitBugReportWithUploads(input: {
     pageTitle?: string
   }
   priority: Priority
-  title?: string
+  title: string
   url?: string
 }): Promise<Awaited<ReturnType<typeof client.bugReport.finalizeUpload>>> {
   const uploadSession = await client.bugReport.createUpload({

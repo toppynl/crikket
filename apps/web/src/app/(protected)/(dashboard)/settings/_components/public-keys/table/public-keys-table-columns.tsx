@@ -105,9 +105,7 @@ export function createPublicKeysTableColumns({
         <div className="flex justify-end">
           <PublicKeyRowActions
             canManage={canManage}
-            isAssigningToProject={
-              assigningToProjectKeyId === row.original.id
-            }
+            isAssigningToProject={assigningToProjectKeyId === row.original.id}
             isDeleting={deletingKeyId === row.original.id}
             isRevoking={revokingKeyId === row.original.id}
             isRotating={rotatingKeyId === row.original.id}
