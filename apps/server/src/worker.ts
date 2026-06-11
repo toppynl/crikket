@@ -1,4 +1,4 @@
-import { initDb } from "@crikket/db"
+import { createDb, runWithDb } from "@crikket/db"
 import { initServerEnv } from "@crikket/env/server"
 import app from "./index"
 
@@ -14,7 +14,15 @@ export default {
     ctx: ExecutionContext
   ): Promise<Response> {
     initServerEnv(env)
-    initDb(env.DB.connectionString)
-    return app.fetch(request, env, ctx)
+
+    // A fresh connection per request: the Workers runtime forbids reusing a
+    // socket across request contexts, and a shared module-global client would
+    // be stomped by concurrent requests. Close it after the response is sent.
+    const { db, sql } = createDb(env.DB.connectionString)
+    try {
+      return await runWithDb(db, () => app.fetch(request, env, ctx))
+    } finally {
+      ctx.waitUntil(sql.end({ timeout: 5 }).catch(() => undefined))
+    }
   },
 }
