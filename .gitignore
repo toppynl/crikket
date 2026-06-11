@@ -37,6 +37,9 @@ lerna-debug.log*
 # Turbo
 .turbo
 
+# Cloudflare Wrangler (generated)
+.wrangler/
+
 # Better-T-Stack
 .alchemy
 

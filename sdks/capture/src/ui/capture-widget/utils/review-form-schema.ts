@@ -41,7 +41,10 @@ export function validateReviewDraft(
     errors.description = "Description must be at most 3000 characters."
   }
 
-  if (!priorityValues.has(value.priority) || value.priority === PRIORITY_OPTIONS.none) {
+  if (
+    !priorityValues.has(value.priority) ||
+    value.priority === PRIORITY_OPTIONS.none
+  ) {
     errors.priority = "Select a priority."
   }
 

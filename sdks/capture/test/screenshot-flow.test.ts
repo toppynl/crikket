@@ -58,7 +58,6 @@ describe("capture SDK screenshot flow", () => {
       warnings: sdkTestState.reviewSnapshot.warnings,
     })
     expect(sdkTestState.uiHidden).toEqual([true, false])
-    expect(sdkTestState.titlePrefills).toEqual(["Buggy Checkout"])
 
     const submitResult = await capture.submit({
       title: " Checkout submit is broken ",

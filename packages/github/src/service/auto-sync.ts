@@ -1,6 +1,10 @@
 import { db } from "@crikket/db"
 import { bugReport } from "@crikket/db/schema/bug-report"
-import { githubIntegration, githubIssueLink, projectGithubConfig } from "@crikket/db/schema/github"
+import {
+  githubIntegration,
+  githubIssueLink,
+  projectGithubConfig,
+} from "@crikket/db/schema/github"
 import { reportNonFatalError } from "@crikket/shared/lib/errors"
 import { and, eq, gt, notExists } from "drizzle-orm"
 import { pushBugReportToGitHub } from "./push-issue"

@@ -37,6 +37,7 @@ export function persistSession(session: DebuggerSession): void {
     }
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persisted))
   } catch {
+    // Ignore session storage failures (quota, private mode, disabled storage).
   }
 }
 
@@ -116,5 +117,6 @@ export function clearPersistedSession(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY)
   } catch {
+    // Ignore session storage failures (quota, private mode, disabled storage).
   }
 }

@@ -2,6 +2,11 @@
 
 import type { authClient } from "@crikket/auth/client"
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@crikket/ui/components/ui/collapsible"
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -12,15 +17,19 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@crikket/ui/components/ui/sidebar"
-import { BookOpen, Settings, Video } from "lucide-react"
+import { BookOpen, ChevronRight, Settings, Video } from "lucide-react"
 import type { Route } from "next"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type * as React from "react"
 import { TeamSwitcher } from "@/components/team-switcher"
 import { UserNav } from "@/components/user-nav"
+import { SETTINGS_NAV, SETTINGS_ROOT } from "@/lib/settings-nav"
 import { getDocsUrl } from "@/lib/site"
 
 type Organization = typeof authClient.$Infer.Organization
@@ -40,14 +49,6 @@ const navPrimary = [
   },
 ]
 
-const navSettings = [
-  {
-    title: "Settings",
-    url: "/settings" as const,
-    icon: Settings,
-  },
-] as const
-
 const navSecondary = [
   {
     title: "Documentation",
@@ -64,6 +65,8 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const pathname = usePathname()
   const docsUrl = getDocsUrl()
+  const isSettingsActive =
+    pathname === SETTINGS_ROOT || pathname.startsWith(`${SETTINGS_ROOT}/`)
 
   return (
     <Sidebar collapsible="icon" variant="inset" {...props}>
@@ -99,26 +102,44 @@ export function AppSidebar({
                   </SidebarMenuItem>
                 )
               })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navSettings.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    isActive={pathname.startsWith(item.url)}
-                    render={(props) => (
-                      <Link href={item.url as Route} {...props} />
-                    )}
-                  >
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <Collapsible
+                className="group/collapsible"
+                defaultOpen={isSettingsActive}
+                render={<SidebarMenuItem />}
+              >
+                <CollapsibleTrigger
+                  render={
+                    <SidebarMenuButton isActive={isSettingsActive}>
+                      <Settings />
+                      <span>Settings</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[panel-open]/menu-button:rotate-90" />
+                    </SidebarMenuButton>
+                  }
+                />
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {SETTINGS_NAV.map((item) => {
+                      const isActive =
+                        pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`)
+
+                      return (
+                        <SidebarMenuSubItem key={item.href}>
+                          <SidebarMenuSubButton
+                            isActive={isActive}
+                            render={(props) => (
+                              <Link href={item.href} {...props} />
+                            )}
+                          >
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )
+                    })}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

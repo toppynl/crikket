@@ -321,6 +321,7 @@
       "dependencies": {
         "@aws-sdk/client-s3": "catalog:",
         "@aws-sdk/s3-request-presigner": "catalog:",
+        "@crikket/bug-reports": "workspace:*",
         "@crikket/db": "workspace:*",
         "@crikket/env": "workspace:*",
         "@crikket/shared": "workspace:*",
@@ -410,7 +411,7 @@
     },
     "sdks/capture": {
       "name": "@crikket-io/capture",
-      "version": "0.1.1",
+      "version": "0.2.1",
       "dependencies": {
         "@crikket/capture-core": "workspace:*",
         "@crikket/shared": "workspace:*",

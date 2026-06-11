@@ -18,7 +18,9 @@ export const sendAuthEmail = async ({
   text,
   react,
 }: SendAuthEmailInput): Promise<void> => {
-  const resendClient = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null
+  const resendClient = env.RESEND_API_KEY
+    ? new Resend(env.RESEND_API_KEY)
+    : null
   const fromEmail = env.RESEND_FROM_EMAIL
 
   if (!resendClient) {

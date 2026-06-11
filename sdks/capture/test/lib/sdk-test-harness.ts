@@ -66,7 +66,6 @@ export const sdkTestState = {
   uiCloseCalls: 0,
   uiShowReviewInputs: [] as ReviewInput[],
   uiShowSuccessUrls: [] as Array<string | undefined>,
-  titlePrefills: [] as string[],
   uiUnmounts: 0,
   startSessionCalls: [] as StartSessionCall[],
   markRecordingStartedCalls: [] as number[],
@@ -138,9 +137,6 @@ mock.module(MOUNT_CAPTURE_UI_PATH, () => ({
           sdkTestState.uiShowSuccessUrls.push(shareUrl)
         },
         showError: () => undefined,
-        setTitleIfEmpty: (value: string) => {
-          sdkTestState.titlePrefills.push(value)
-        },
         destroy: () => undefined,
       },
       unmount: () => {
@@ -257,7 +253,8 @@ mock.module(SESSION_STORAGE_PATH, () => ({
         Date.now() - record.savedAt > MAX_SESSION_AGE_MS ||
         typeof record.sessionId !== "string" ||
         !record.sessionId ||
-        (record.captureType !== "video" && record.captureType !== "screenshot") ||
+        (record.captureType !== "video" &&
+          record.captureType !== "screenshot") ||
         typeof record.startedAt !== "number"
       ) {
         sessionStorage.removeItem(STORAGE_KEY)
@@ -298,14 +295,22 @@ mock.module(SESSION_STORAGE_PATH, () => ({
     try {
       sessionStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ ...session, version: SESSION_VERSION, savedAt: Date.now() })
+        JSON.stringify({
+          ...session,
+          version: SESSION_VERSION,
+          savedAt: Date.now(),
+        })
       )
-    } catch {}
+    } catch {
+      // Ignore storage failures in the test harness.
+    }
   },
   clearPersistedSession: () => {
     try {
       sessionStorage.removeItem(STORAGE_KEY)
-    } catch {}
+    } catch {
+      // Ignore storage failures in the test harness.
+    }
   },
 }))
 
@@ -358,7 +363,6 @@ export function resetSdkTestState(): void {
   sdkTestState.uiCloseCalls = 0
   sdkTestState.uiShowReviewInputs = []
   sdkTestState.uiShowSuccessUrls = []
-  sdkTestState.titlePrefills = []
   sdkTestState.uiUnmounts = 0
   sdkTestState.startSessionCalls = []
   sdkTestState.markRecordingStartedCalls = []

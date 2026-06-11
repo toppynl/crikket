@@ -39,7 +39,7 @@ function resetState(): void {
 }
 
 mock.module(`${BILLING_SRC}/lib/payments.ts`, () => ({
-  polarClient: {
+  getPolarClient: () => ({
     subscriptions: {
       get: (input: { id: string }) => {
         const subscription = state.subscriptionsById.get(input.id)
@@ -88,7 +88,7 @@ mock.module(`${BILLING_SRC}/lib/payments.ts`, () => ({
         return { result: { items: [] as TestSubscription[] } }
       },
     },
-  },
+  }),
 }))
 
 let findUpdatableSubscription: typeof import("../src/service/checkout/subscription-discovery").findUpdatableSubscription

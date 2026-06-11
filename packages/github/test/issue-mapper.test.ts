@@ -1,9 +1,14 @@
 import { describe, expect, it } from "bun:test"
-import { type BugReportForIssue, mapBugReportToIssue } from "../src/issue-mapper"
+import {
+  type BugReportForIssue,
+  mapBugReportToIssue,
+} from "../src/issue-mapper"
 
 const APP_URL = "https://app.example.com"
 
-function makeReport(overrides: Partial<BugReportForIssue> = {}): BugReportForIssue {
+function makeReport(
+  overrides: Partial<BugReportForIssue> = {}
+): BugReportForIssue {
   return {
     id: "report-123",
     title: "Button does nothing",
@@ -12,7 +17,11 @@ function makeReport(overrides: Partial<BugReportForIssue> = {}): BugReportForIss
     tags: ["ui", "regression"],
     url: "https://app.example.com/dashboard",
     deviceInfo: { browser: "Chrome 120", os: "macOS 14", viewport: "1440x900" },
-    metadata: { duration: "00:01:23", sdkVersion: "0.1.0", submittedVia: "widget" },
+    metadata: {
+      duration: "00:01:23",
+      sdkVersion: "0.1.0",
+      submittedVia: "widget",
+    },
     attachmentType: "screenshot",
     captureUrl: "https://s3.example.com/capture.png?X-Amz-Expires=31536000",
     debuggerUrl: "https://s3.example.com/debug.json?X-Amz-Expires=31536000",
@@ -46,12 +55,18 @@ describe("mapBugReportToIssue: title", () => {
 
 describe("mapBugReportToIssue: labels", () => {
   it("includes priority label for non-none priorities", () => {
-    const { labels } = mapBugReportToIssue(makeReport({ priority: "high" }), APP_URL)
+    const { labels } = mapBugReportToIssue(
+      makeReport({ priority: "high" }),
+      APP_URL
+    )
     expect(labels).toContain("priority: high")
   })
 
   it("omits priority label when priority is none", () => {
-    const { labels } = mapBugReportToIssue(makeReport({ priority: "none" }), APP_URL)
+    const { labels } = mapBugReportToIssue(
+      makeReport({ priority: "none" }),
+      APP_URL
+    )
     expect(labels).not.toContain("priority: none")
   })
 
@@ -62,7 +77,10 @@ describe("mapBugReportToIssue: labels", () => {
   })
 
   it("includes priority label color", () => {
-    const { labelColors } = mapBugReportToIssue(makeReport({ priority: "critical" }), APP_URL)
+    const { labelColors } = mapBugReportToIssue(
+      makeReport({ priority: "critical" }),
+      APP_URL
+    )
     expect(labelColors["priority: critical"]).toBe("b60205")
   })
 })
@@ -88,7 +106,10 @@ describe("mapBugReportToIssue: issue body — description", () => {
   })
 
   it("omits description section when null", () => {
-    const { body } = mapBugReportToIssue(makeReport({ description: null }), APP_URL)
+    const { body } = mapBugReportToIssue(
+      makeReport({ description: null }),
+      APP_URL
+    )
     expect(body).not.toContain("## Description")
   })
 })
@@ -128,7 +149,10 @@ describe("mapBugReportToIssue: issue body — artifacts", () => {
   })
 
   it("shows 'not available' when capture URL is null", () => {
-    const { body } = mapBugReportToIssue(makeReport({ captureUrl: null }), APP_URL)
+    const { body } = mapBugReportToIssue(
+      makeReport({ captureUrl: null }),
+      APP_URL
+    )
     expect(body).toContain("not available")
   })
 
@@ -186,7 +210,9 @@ describe("mapBugReportToIssue: issue body — console logs", () => {
     const ts = new Date("2026-04-23T10:01:00.000Z")
     const { body } = mapBugReportToIssue(
       makeReport({
-        logs: [{ level: "error", message: "Cannot read property", timestamp: ts }],
+        logs: [
+          { level: "error", message: "Cannot read property", timestamp: ts },
+        ],
       }),
       APP_URL
     )

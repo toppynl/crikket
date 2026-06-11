@@ -15,6 +15,6 @@ export default {
   ): Promise<Response> {
     initServerEnv(env)
     initDb(env.DB.connectionString)
-    return app.fetch(request, env, ctx)
+    return await app.fetch(request, env, ctx)
   },
 }
