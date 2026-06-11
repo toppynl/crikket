@@ -8,6 +8,7 @@ import { bugReportRouter } from "./bug-report"
 import { captureKeyRouter } from "./capture-key"
 import { githubRouter } from "./github"
 import { projectRouter } from "./project"
+import { tagRouter } from "./tag"
 
 export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
@@ -19,6 +20,7 @@ export const appRouter = {
   captureKey: captureKeyRouter,
   github: githubRouter,
   project: projectRouter,
+  tag: tagRouter,
 }
 export type AppRouter = typeof appRouter
 export type AppRouterClient = RouterClient<typeof appRouter>

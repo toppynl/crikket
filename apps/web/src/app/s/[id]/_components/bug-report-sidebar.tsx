@@ -3,6 +3,7 @@ import { cn } from "@crikket/ui/lib/utils"
 import { Globe, Info, MousePointerClick, Terminal } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { BugReportTagsField } from "@/components/bug-reports/bug-report-tags-field"
 import { NetworkRequestsPanel } from "./network-requests-panel"
 import { ReproductionStepsList } from "./reproduction-steps-list"
 import { TimelineList } from "./timeline-list"
@@ -41,6 +42,7 @@ interface BugReportSidebarProps {
   activeTab: SidebarTab
   tabAction?: ReactNode
   onTabChange: (tab: SidebarTab) => void
+  onTagsUpdated?: () => Promise<void> | void
   timeline: {
     actions: ActionsSidebarState
     console: TimelineSidebarState
@@ -55,6 +57,7 @@ export function BugReportSidebar({
   activeTab,
   tabAction,
   onTabChange,
+  onTagsUpdated,
   timeline,
   network,
   onEntrySelect,
@@ -101,6 +104,18 @@ export function BugReportSidebar({
       <div className="flex-1 overflow-y-auto">
         {activeTab === "details" && (
           <div className="space-y-6 p-4">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                Tags
+              </h3>
+              <BugReportTagsField
+                editable={data.canEdit}
+                onUpdated={onTagsUpdated}
+                reportId={bugReportId}
+                tags={data.tags}
+              />
+            </div>
+            <Separator />
             <div className="space-y-4">
               <h3 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                 Isolate Context

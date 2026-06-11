@@ -16,6 +16,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@crikket/ui/components/ui/dropdown-menu"
+import {
+  Faceted,
+  FacetedBadgeList,
+  FacetedContent,
+  FacetedEmpty,
+  FacetedGroup,
+  FacetedInput,
+  FacetedItem,
+  FacetedList,
+  FacetedTrigger,
+} from "@crikket/ui/components/ui/faceted"
 import { Input } from "@crikket/ui/components/ui/input"
 import {
   Select,
@@ -24,6 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@crikket/ui/components/ui/select"
+import { cn } from "@crikket/ui/lib/utils"
+import { useQuery } from "@tanstack/react-query"
 import {
   Filter,
   Search,
@@ -34,6 +47,10 @@ import {
 } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { TagBadge } from "@/components/bug-reports/tag-badge"
+import { tagDotClasses } from "@/components/bug-reports/tag-colors"
+import { useOrgTags } from "@/components/bug-reports/use-org-tags"
+import { orpc } from "@/utils/orpc"
 import {
   type DashboardFilters,
   formatPriorityLabel,
@@ -46,6 +63,8 @@ import {
 } from "./filters"
 import type { BugReportStats } from "./types"
 
+const ALL_PROJECTS_VALUE = "__all__"
+
 interface BugReportsToolbarProps {
   search: string
   sort: BugReportSort
@@ -56,6 +75,8 @@ interface BugReportsToolbarProps {
   onToggleStatus: (value: BugReportStatus) => void
   onTogglePriority: (value: Priority) => void
   onToggleVisibility: (value: BugReportVisibility) => void
+  onProjectChange: (value: string | null) => void
+  onTagsChange: (value: string[]) => void
   onClearFilters: () => void
 }
 
@@ -63,7 +84,9 @@ function countActiveFilters(filters: DashboardFilters): number {
   return (
     filters.statuses.length +
     filters.priorities.length +
-    filters.visibilities.length
+    filters.visibilities.length +
+    (filters.projectId ? 1 : 0) +
+    filters.tagIds.length
   )
 }
 
@@ -77,11 +100,25 @@ export function BugReportsToolbar({
   onToggleStatus,
   onTogglePriority,
   onToggleVisibility,
+  onProjectChange,
+  onTagsChange,
   onClearFilters,
 }: BugReportsToolbarProps) {
   const activeFilters = countActiveFilters(filters)
   const selectedSortLabel =
     SORT_OPTIONS.find((option) => option.value === sort)?.label ?? "Sort"
+
+  const projectsQuery = useQuery(orpc.project.list.queryOptions())
+  const projects = projectsQuery.data ?? []
+  const { tags } = useOrgTags()
+
+  const tagOptions = tags.map((tag) => ({ label: tag.name, value: tag.id }))
+  const selectedProject = filters.projectId
+    ? projects.find((project) => project.id === filters.projectId)
+    : undefined
+  const selectedTags = filters.tagIds
+    .map((id) => tags.find((tag) => tag.id === id))
+    .filter((tag): tag is (typeof tags)[number] => Boolean(tag))
 
   return (
     <div className="space-y-3 rounded-lg border bg-card p-3">
@@ -101,7 +138,7 @@ export function BugReportsToolbar({
             onValueChange={(value) => onSortChange(value as BugReportSort)}
             value={sort}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[180px]">
               <SelectValue>{selectedSortLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -112,6 +149,64 @@ export function BugReportsToolbar({
               ))}
             </SelectContent>
           </Select>
+
+          <Select
+            onValueChange={(value) =>
+              onProjectChange(value === ALL_PROJECTS_VALUE ? null : value)
+            }
+            value={filters.projectId ?? ALL_PROJECTS_VALUE}
+          >
+            <SelectTrigger className="w-[170px]">
+              <SelectValue>
+                {selectedProject?.name ?? "All projects"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_PROJECTS_VALUE}>All projects</SelectItem>
+              {projects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Faceted
+            multiple
+            onValueChange={(value) => onTagsChange(value ?? [])}
+            value={filters.tagIds}
+          >
+            <FacetedTrigger
+              render={
+                <Button className="w-[160px]" size="sm" variant="outline" />
+              }
+            >
+              <FacetedBadgeList
+                max={1}
+                options={tagOptions}
+                placeholder="Tags"
+              />
+            </FacetedTrigger>
+            <FacetedContent>
+              <FacetedInput placeholder="Search tags..." />
+              <FacetedList>
+                <FacetedEmpty>No tags found.</FacetedEmpty>
+                <FacetedGroup>
+                  {tags.map((tag) => (
+                    <FacetedItem key={tag.id} value={tag.id}>
+                      <span
+                        className={cn(
+                          "size-2 shrink-0 rounded-full",
+                          tagDotClasses(tag.color)
+                        )}
+                      />
+                      <span className="truncate">{tag.name}</span>
+                    </FacetedItem>
+                  ))}
+                </FacetedGroup>
+              </FacetedList>
+            </FacetedContent>
+          </Faceted>
 
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -197,6 +292,10 @@ export function BugReportsToolbar({
           label="Total"
           value={stats?.total ?? 0}
         />
+        {selectedProject ? <Pill>{selectedProject.name}</Pill> : null}
+        {selectedTags.map((tag) => (
+          <TagBadge key={tag.id} tag={tag} withDot />
+        ))}
         {filters.statuses.map((status) => (
           <Pill key={status}>{formatStatusLabel(status)}</Pill>
         ))}

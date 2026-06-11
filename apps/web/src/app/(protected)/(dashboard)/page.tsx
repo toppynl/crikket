@@ -15,12 +15,6 @@ export const metadata: Metadata = {
 export default function DashboardPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 pt-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-3xl tracking-tight">{META.title}</h1>
-          <p className="mt-1 text-muted-foreground">{META.description}</p>
-        </div>
-      </div>
       <BugReportsList />
     </div>
   )

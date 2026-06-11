@@ -56,11 +56,13 @@ const EMPTY_DASHBOARD_FILTERS: DashboardFilters = {
   statuses: [],
   priorities: [],
   visibilities: [],
+  projectId: null,
+  tagIds: [],
 }
 
 export function useBugReportsFilters() {
   const [
-    { search, sort, statuses, priorities, visibilities },
+    { search, sort, statuses, priorities, visibilities, projectId, tagIds },
     setFilterSearchQuery,
   ] = useQueryStates(
     {
@@ -77,6 +79,10 @@ export function useBugReportsFilters() {
         .withOptions({ clearOnDefault: true })
         .withDefault([]),
       visibilities: parseAsArrayOf(parseAsStringLiteral(VISIBILITY_VALUES))
+        .withOptions({ clearOnDefault: true })
+        .withDefault([]),
+      projectId: parseAsString.withOptions({ clearOnDefault: true }),
+      tagIds: parseAsArrayOf(parseAsString)
         .withOptions({ clearOnDefault: true })
         .withDefault([]),
     },
@@ -101,15 +107,23 @@ export function useBugReportsFilters() {
   }, [debouncedSearch, search, setFilterSearchQuery])
 
   const filters = useMemo<DashboardFilters>(
-    () => ({ statuses, priorities, visibilities }),
-    [statuses, priorities, visibilities]
+    () => ({
+      statuses,
+      priorities,
+      visibilities,
+      projectId: projectId ?? null,
+      tagIds,
+    }),
+    [statuses, priorities, visibilities, projectId, tagIds]
   )
 
   const hasFilters = useMemo(
     () =>
       filters.statuses.length > 0 ||
       filters.priorities.length > 0 ||
-      filters.visibilities.length > 0,
+      filters.visibilities.length > 0 ||
+      filters.projectId !== null ||
+      filters.tagIds.length > 0,
     [filters]
   )
 
@@ -127,6 +141,8 @@ export function useBugReportsFilters() {
         statuses: EMPTY_DASHBOARD_FILTERS.statuses,
         priorities: EMPTY_DASHBOARD_FILTERS.priorities,
         visibilities: EMPTY_DASHBOARD_FILTERS.visibilities,
+        projectId: null,
+        tagIds: EMPTY_DASHBOARD_FILTERS.tagIds,
       }).catch(() => undefined)
     },
     resetFiltersAndSearch: () => {
@@ -136,6 +152,8 @@ export function useBugReportsFilters() {
         statuses: EMPTY_DASHBOARD_FILTERS.statuses,
         priorities: EMPTY_DASHBOARD_FILTERS.priorities,
         visibilities: EMPTY_DASHBOARD_FILTERS.visibilities,
+        projectId: null,
+        tagIds: EMPTY_DASHBOARD_FILTERS.tagIds,
       }).catch(() => undefined)
     },
     hasActiveFilters: hasFilters || debouncedSearch.length > 0,
@@ -151,5 +169,9 @@ export function useBugReportsFilters() {
       setFilterSearchQuery({
         visibilities: toggleValue(filters.visibilities, value),
       }).catch(() => undefined),
+    setProjectId: (value: string | null) =>
+      setFilterSearchQuery({ projectId: value }).catch(() => undefined),
+    setTagIds: (value: string[]) =>
+      setFilterSearchQuery({ tagIds: value }).catch(() => undefined),
   }
 }

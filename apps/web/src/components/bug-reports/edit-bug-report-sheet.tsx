@@ -32,6 +32,8 @@ import { useForm } from "@tanstack/react-form"
 import { useState } from "react"
 import { toast } from "sonner"
 
+import type { TagSummary } from "@/components/bug-reports/tag-badge"
+import { TagMultiSelect } from "@/components/bug-reports/tag-multi-select"
 import { editBugReportFormSchema } from "@/lib/schema/bug-report"
 import { client } from "@/utils/orpc"
 
@@ -72,17 +74,6 @@ function getVisibilityLabel(value: BugReportVisibility): string {
   )
 }
 
-function parseTagInput(tagInput: string): string[] {
-  return Array.from(
-    new Set(
-      tagInput
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0)
-    )
-  )
-}
-
 interface EditBugReportSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -90,7 +81,7 @@ interface EditBugReportSheetProps {
   report: {
     id: string
     title: string | null | undefined
-    tags: string[]
+    tags: TagSummary[]
     status: BugReportStatus
     priority: Priority
     visibility: BugReportVisibility
@@ -108,7 +99,7 @@ export function EditBugReportSheet({
   const form = useForm({
     defaultValues: {
       title: report.title ?? "",
-      tagsInput: report.tags.join(", "),
+      tagIds: report.tags.map((tag) => tag.id),
       status: report.status,
       priority: report.priority,
       visibility: report.visibility,
@@ -123,7 +114,7 @@ export function EditBugReportSheet({
         await client.bugReport.update({
           id: report.id,
           title: value.title.trim(),
-          tags: parseTagInput(value.tagsInput),
+          tagIds: value.tagIds,
           status: value.status,
           priority: value.priority,
           visibility: value.visibility,
@@ -144,7 +135,7 @@ export function EditBugReportSheet({
   const resetFormValues = () => {
     form.reset({
       title: report.title ?? "",
-      tagsInput: report.tags.join(", "),
+      tagIds: report.tags.map((tag) => tag.id),
       status: report.status,
       priority: report.priority,
       visibility: report.visibility,
@@ -206,7 +197,7 @@ export function EditBugReportSheet({
               }}
             </form.Field>
 
-            <form.Field name="tagsInput">
+            <form.Field name="tagIds">
               {(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
@@ -215,16 +206,9 @@ export function EditBugReportSheet({
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Tags</FieldLabel>
-                    <Input
-                      aria-invalid={isInvalid}
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(event) =>
-                        field.handleChange(event.target.value)
-                      }
-                      placeholder="auth, dashboard, onboarding"
-                      value={field.state.value}
+                    <TagMultiSelect
+                      onChange={(ids) => field.handleChange(ids)}
+                      selectedIds={field.state.value}
                     />
                     {isInvalid ? (
                       <FieldError errors={field.state.meta.errors} />

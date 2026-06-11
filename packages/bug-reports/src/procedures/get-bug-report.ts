@@ -7,6 +7,7 @@ import {
 import { ORPCError } from "@orpc/server"
 import { eq } from "drizzle-orm"
 import { resolveCaptureUrl } from "../lib/storage"
+import { getTagsForBugReport } from "../lib/tag"
 import {
   assertBugReportAccessById,
   assertVisibilityAccess,
@@ -59,6 +60,7 @@ export const getBugReportById = o
     const attachmentUrl = await resolveCaptureUrl({
       captureKey: report.captureKey,
     })
+    const tags = await getTagsForBugReport(report.id)
 
     return {
       id: report.id,
@@ -66,7 +68,11 @@ export const getBugReportById = o
       description: report.description,
       status,
       priority,
-      tags: Array.isArray(report.tags) ? report.tags : [],
+      tags: tags.map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+        color: tag.color,
+      })),
       url: report.url,
       attachmentUrl,
       attachmentType: report.attachmentType,

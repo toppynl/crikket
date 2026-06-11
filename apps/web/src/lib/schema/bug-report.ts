@@ -21,18 +21,6 @@ const visibilityValues = Object.values(BUG_REPORT_VISIBILITY_OPTIONS) as [
 ]
 
 const MAX_TAGS = 20
-const MAX_TAG_LENGTH = 40
-
-function parseTagInput(tagInput: string): string[] {
-  return Array.from(
-    new Set(
-      tagInput
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0)
-    )
-  )
-}
 
 export const editBugReportFormSchema = z.object({
   title: z
@@ -40,24 +28,9 @@ export const editBugReportFormSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(200, "Name must be 200 characters or fewer"),
-  tagsInput: z.string().superRefine((value, ctx) => {
-    const tags = parseTagInput(value)
-    if (tags.length > MAX_TAGS) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Use ${MAX_TAGS} tags or fewer`,
-      })
-      return
-    }
-
-    const hasLongTag = tags.some((tag) => tag.length > MAX_TAG_LENGTH)
-    if (hasLongTag) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Each tag must be ${MAX_TAG_LENGTH} characters or fewer`,
-      })
-    }
-  }),
+  tagIds: z
+    .array(z.string().min(1))
+    .max(MAX_TAGS, `Use ${MAX_TAGS} tags or fewer`),
   status: z.enum(statusValues),
   priority: z.enum(priorityValues),
   visibility: z.enum(visibilityValues),

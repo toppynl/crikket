@@ -7,6 +7,7 @@ import {
   FolderOpen,
   Github,
   KeyRound,
+  Tag,
   UserRound,
 } from "lucide-react"
 import type { Route } from "next"
@@ -31,6 +32,12 @@ const SETTINGS_ITEMS = [
     title: "Projects",
     description: "Manage projects and integrations",
     icon: FolderOpen,
+  },
+  {
+    href: "/settings/tags",
+    title: "Tags",
+    description: "Reusable labels for bug reports",
+    icon: Tag,
   },
   {
     href: "/settings/keys",

@@ -10,7 +10,6 @@ import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { client } from "@/utils/orpc"
-import { parseTagInput } from "../_components/bug-reports/utils"
 
 interface UseBugReportsActionsInput {
   reportIds: string[]
@@ -30,7 +29,7 @@ export function useBugReportsActions({
   const [bulkVisibility, setBulkVisibility] = useState<
     BugReportVisibility | ""
   >("")
-  const [bulkTagsInput, setBulkTagsInput] = useState("")
+  const [bulkTagIds, setBulkTagIds] = useState<string[]>([])
 
   useEffect(() => {
     setSelectedIds((previous) => {
@@ -49,7 +48,7 @@ export function useBugReportsActions({
     setBulkStatus("")
     setBulkPriority("")
     setBulkVisibility("")
-    setBulkTagsInput("")
+    setBulkTagIds([])
   }
 
   const deleteMutation = useMutation({
@@ -102,7 +101,7 @@ export function useBugReportsActions({
       status?: BugReportStatus
       priority?: Priority
       visibility?: BugReportVisibility
-      tags?: string[]
+      tagIds?: string[]
     }) => client.bugReport.updateBulk(input),
     onSuccess: async (result) => {
       await refetchAll()
@@ -158,12 +157,11 @@ export function useBugReportsActions({
       return
     }
 
-    const tags = parseTagInput(bulkTagsInput)
     const hasUpdate =
       Boolean(bulkStatus) ||
       Boolean(bulkPriority) ||
       Boolean(bulkVisibility) ||
-      tags.length > 0
+      bulkTagIds.length > 0
 
     if (!hasUpdate) {
       toast.error("Select at least one update field")
@@ -175,7 +173,7 @@ export function useBugReportsActions({
       status: bulkStatus || undefined,
       priority: bulkPriority || undefined,
       visibility: bulkVisibility || undefined,
-      tags: tags.length > 0 ? tags : undefined,
+      tagIds: bulkTagIds.length > 0 ? bulkTagIds : undefined,
     })
   }
 
@@ -197,8 +195,8 @@ export function useBugReportsActions({
     setBulkPriority,
     bulkVisibility,
     setBulkVisibility,
-    bulkTagsInput,
-    setBulkTagsInput,
+    bulkTagIds,
+    setBulkTagIds,
 
     isMutating,
     updateMutation,
