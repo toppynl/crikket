@@ -29,6 +29,13 @@
       "when": 1776948670488,
       "tag": "0002_fat_forgotten_one",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781163809698,
+      "tag": "0004_hard_darwin",
+      "breakpoints": true
     }
   ]
 }

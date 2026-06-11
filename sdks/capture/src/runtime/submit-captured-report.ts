@@ -1,11 +1,13 @@
 import { BUG_REPORT_VISIBILITY_OPTIONS } from "@crikket/shared/constants/bug-report"
 import { defaultSubmitTransport } from "../transport/default-submit-transport"
 import type {
+  CaptureContext,
   CapturedMedia,
   CaptureRuntimeConfig,
   CaptureSubmissionDraft,
   CaptureSubmitResult,
   CaptureSubmitTransport,
+  CaptureUser,
   ReviewSnapshot,
 } from "../types"
 import { getDeviceInfo, getPageTitle, getPageUrl } from "../utils"
@@ -16,6 +18,8 @@ export function submitCapturedReport(input: {
   media: CapturedMedia
   review: ReviewSnapshot
   submitTransport?: CaptureSubmitTransport
+  user?: CaptureUser
+  context?: CaptureContext
 }): Promise<CaptureSubmitResult> {
   const submitTransport = input.submitTransport ?? defaultSubmitTransport
 
@@ -33,6 +37,8 @@ export function submitCapturedReport(input: {
       deviceInfo: getDeviceInfo(),
       debuggerPayload: input.review.debuggerPayload,
       debuggerSummary: input.review.debuggerSummary,
+      user: input.user,
+      context: input.context,
       media: input.media.blob,
     },
   })

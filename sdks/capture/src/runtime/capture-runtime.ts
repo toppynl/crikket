@@ -5,12 +5,14 @@ import {
   startDisplayRecording,
 } from "../media/lazy-capture-media"
 import type {
+  CaptureContext,
   CapturedMedia,
   CaptureInitOptions,
   CaptureRuntimeConfig,
   CaptureRuntimeController,
   CaptureSubmissionDraft,
   CaptureSubmitTransport,
+  CaptureUser,
   RecordingController,
   ReviewSnapshot,
 } from "../types"
@@ -32,6 +34,8 @@ export class CaptureSdkRuntime implements CaptureRuntimeController {
   private activeRecording: RecordingController | null = null
   private currentMedia: CapturedMedia | null = null
   private currentReview: ReviewSnapshot | null = null
+  private currentUser: CaptureUser | null = null
+  private currentContext: CaptureContext | null = null
 
   init(options: CaptureInitOptions): CaptureRuntimeController {
     let key: string
@@ -51,6 +55,8 @@ export class CaptureSdkRuntime implements CaptureRuntimeController {
 
     this.runtimeConfig = config
     this.submitTransport = options.submitTransport
+    this.currentUser = options.user ?? null
+    this.currentContext = options.context ?? null
 
     if (options.autoMount ?? true) {
       this.mount(options.mountTarget)
@@ -69,6 +75,14 @@ export class CaptureSdkRuntime implements CaptureRuntimeController {
 
   getConfig(): CaptureRuntimeConfig | null {
     return this.runtimeConfig
+  }
+
+  setUser(user: CaptureUser | null): void {
+    this.currentUser = user
+  }
+
+  setContext(context: CaptureContext | null): void {
+    this.currentContext = context
   }
 
   mount(target?: HTMLElement): void {
@@ -249,6 +263,8 @@ export class CaptureSdkRuntime implements CaptureRuntimeController {
       media,
       review: this.currentReview,
       submitTransport: this.submitTransport,
+      user: this.currentUser ?? undefined,
+      context: this.currentContext ?? undefined,
     })
 
     if (this.mountedUi) {

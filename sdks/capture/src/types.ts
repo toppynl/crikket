@@ -75,6 +75,20 @@ export interface BugReportDebuggerPayload {
   }>
 }
 
+/**
+ * Identified end-user of the host application. `id`, `email` and `name` are
+ * well-known fields; any additional keys are passed through as-is.
+ */
+export interface CaptureUser {
+  id?: string
+  email?: string
+  name?: string
+  [key: string]: unknown
+}
+
+/** Freeform context attached to every capture (e.g. tenant, plan, route). */
+export type CaptureContext = Record<string, unknown>
+
 export interface CaptureInitOptions {
   key: string
   host?: string
@@ -83,6 +97,8 @@ export interface CaptureInitOptions {
   submitPath?: string
   zIndex?: number
   submitTransport?: CaptureSubmitTransport
+  user?: CaptureUser
+  context?: CaptureContext
 }
 
 export interface CaptureRuntimeConfig {
@@ -123,6 +139,8 @@ export interface CaptureSubmitRequest {
     }
     debuggerPayload?: BugReportDebuggerPayload
     debuggerSummary: CaptureDebuggerSummary
+    user?: CaptureUser
+    context?: CaptureContext
     media: Blob
   }
 }
@@ -190,6 +208,10 @@ export interface CaptureRuntimeController {
   reset: () => void
   isInitialized: () => boolean
   getConfig: () => CaptureRuntimeConfig | null
+  /** Replace the identified end-user attached to captures. Pass null to clear. */
+  setUser: (user: CaptureUser | null) => void
+  /** Replace the freeform context attached to captures. Pass null to clear. */
+  setContext: (context: CaptureContext | null) => void
 }
 
 export type CaptureGlobalApi = typeof eagerCapture

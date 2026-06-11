@@ -1,10 +1,12 @@
 import type {
+  CaptureContext,
   CaptureInitOptions,
   CaptureRuntimeConfig,
   CaptureRuntimeController,
   CaptureSubmissionDraft,
   CaptureSubmitResult,
   CaptureSubmitTransport,
+  CaptureUser,
 } from "../types"
 import { mountCaptureLauncher } from "../ui/mount-capture-launcher"
 import {
@@ -67,6 +69,20 @@ export class LazyCaptureSdkRuntime implements CaptureRuntimeController {
 
   getConfig(): CaptureRuntimeConfig | null {
     return this.runtimeConfig
+  }
+
+  setUser(user: CaptureUser | null): void {
+    if (this.initOptions) {
+      this.initOptions.user = user ?? undefined
+    }
+    this.eagerRuntime?.setUser(user)
+  }
+
+  setContext(context: CaptureContext | null): void {
+    if (this.initOptions) {
+      this.initOptions.context = context ?? undefined
+    }
+    this.eagerRuntime?.setContext(context)
   }
 
   mount(target?: HTMLElement): void {

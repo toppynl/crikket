@@ -106,6 +106,7 @@ export async function defaultSubmitTransport(
 function buildUploadSessionRequest(request: CaptureSubmitRequest): {
   attachmentType: CaptureSubmitRequest["report"]["captureType"]
   captureContentType?: string
+  context?: CaptureSubmitRequest["report"]["context"]
   description: string
   debuggerSummary: CaptureSubmitRequest["report"]["debuggerSummary"]
   deviceInfo?: CaptureSubmitRequest["report"]["deviceInfo"]
@@ -118,6 +119,7 @@ function buildUploadSessionRequest(request: CaptureSubmitRequest): {
   priority: CaptureSubmitRequest["report"]["priority"]
   title: string
   url: string
+  user?: CaptureSubmitRequest["report"]["user"]
   visibility: CaptureSubmitRequest["report"]["visibility"]
 } {
   if (request.report.media.size > 95 * 1024 * 1024) {
@@ -137,6 +139,8 @@ function buildUploadSessionRequest(request: CaptureSubmitRequest): {
       submittedVia: "capture-sdk",
     },
     deviceInfo: request.report.deviceInfo,
+    user: request.report.user,
+    context: request.report.context,
     captureContentType: request.report.media.type || undefined,
     debuggerSummary: request.report.debuggerSummary,
     hasDebuggerPayload: Boolean(request.report.debuggerPayload),

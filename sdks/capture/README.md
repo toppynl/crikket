@@ -80,6 +80,37 @@ Available options:
 - `mountTarget`: custom element to mount into; defaults to `document.body`
 - `submitPath`: custom bug report base path; defaults to `/api/embed/bug-reports`
 - `zIndex`: custom widget stacking order
+- `user`: the identified end-user to attach to captures — `{ id?, email?, name? }`
+  plus any extra fields you want
+- `context`: a freeform `Record<string, unknown>` attached to every capture
+  (e.g. tenant, plan, current route)
+
+### Attaching the current user and context
+
+Especially useful for internal tools, where knowing who reported an issue (and
+the app state at the time) speeds up triage. Pass `user`/`context` at init, or
+update them later as the user signs in/out or navigates:
+
+```ts
+import { init } from "@crikket-io/capture"
+
+const capture = init({
+  key: "crk_your_public_key",
+  user: { id: "u_123", email: "ada@example.com", name: "Ada Lovelace" },
+  context: { tenant: "acme", plan: "enterprise" },
+})
+
+// later, e.g. after navigation or a login/logout
+capture.setUser({ id: "u_456", email: "grace@example.com" })
+capture.setContext({ tenant: "acme", route: "/billing" })
+
+// clear on logout
+capture.setUser(null)
+```
+
+`setUser` / `setContext` replace the current value (pass `null` to clear). The
+same `user` and `context` props are accepted by `CapturePlugin` and stay in
+sync as they change.
 
 `submitPath` is used as the base path for the capture control-plane flow. By
 default the SDK derives these routes from `/api/embed/bug-reports`:

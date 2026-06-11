@@ -50,6 +50,8 @@ export const bugReport = pgTable(
     visibility: text("visibility").default("private").notNull(), // public | private
     metadata: jsonb("metadata"),
     deviceInfo: jsonb("device_info"), // browser, os, viewport, etc.
+    endUser: jsonb("end_user"), // identified end-user passed by the SDK consumer (id, email, name, ...)
+    context: jsonb("context"), // freeform context bag passed by the SDK consumer
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -92,6 +94,8 @@ export const bugReportUploadSession = pgTable(
     debuggerKey: text("debugger_key"),
     metadata: jsonb("metadata"),
     deviceInfo: jsonb("device_info"),
+    endUser: jsonb("end_user"),
+    context: jsonb("context"),
     expiresAt: timestamp("expires_at").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")

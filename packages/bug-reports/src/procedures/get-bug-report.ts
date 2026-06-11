@@ -77,6 +77,8 @@ export const getBugReportById = o
       canEdit,
       deviceInfo: report.deviceInfo,
       metadata: report.metadata,
+      endUser: report.endUser,
+      context: report.context,
       createdAt: report.createdAt.toISOString(),
       updatedAt: report.updatedAt.toISOString(),
       reporter: report.reporter

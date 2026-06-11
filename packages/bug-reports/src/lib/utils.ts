@@ -56,12 +56,7 @@ export const optionalText = (max: number) =>
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined))
 
-export const requiredText = (max: number) =>
-  z
-    .string()
-    .trim()
-    .min(1)
-    .max(max)
+export const requiredText = (max: number) => z.string().trim().min(1).max(max)
 
 export const metadataInputSchema = z
   .object({
@@ -78,6 +73,37 @@ export const metadataInputSchema = z
     pageTitle: z.string().max(300).optional(),
     sdkVersion: z.string().max(40).optional(),
     submittedVia: z.string().max(40).optional(),
+  })
+  .optional()
+
+// Cap the serialized size of consumer-supplied context payloads so a single
+// capture cannot push arbitrarily large JSON into the database.
+const MAX_END_USER_BYTES = 4 * 1024
+const MAX_CONTEXT_BYTES = 16 * 1024
+
+const withinByteLimit = (max: number) => (value: unknown) =>
+  JSON.stringify(value ?? null).length <= max
+
+// Identified end-user of the SDK consumer's app. Known fields are validated;
+// arbitrary extra keys are allowed via passthrough for internal-tool use cases.
+export const endUserInputSchema = z
+  .object({
+    id: z.string().max(200).optional(),
+    email: z.string().email().max(320).optional(),
+    name: z.string().max(200).optional(),
+  })
+  .passthrough()
+  .refine(withinByteLimit(MAX_END_USER_BYTES), {
+    message: "User context payload is too large.",
+  })
+  .optional()
+
+// Freeform context bag. Values are unconstrained but the whole payload is
+// size-bounded.
+export const captureContextInputSchema = z
+  .record(z.string(), z.unknown())
+  .refine(withinByteLimit(MAX_CONTEXT_BYTES), {
+    message: "Context payload is too large.",
   })
   .optional()
 
@@ -170,7 +196,6 @@ export function normalizeDebuggerNetworkRequestPagination(input: {
     limit: perPage,
   }
 }
-
 
 export function formatDurationMs(durationMs: number): string {
   const safeDurationMs = Math.max(0, Math.floor(durationMs))
