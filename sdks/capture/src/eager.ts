@@ -1,13 +1,16 @@
 import { CaptureSdkRuntime } from "./runtime/capture-runtime"
 import type {
+  CaptureContext,
   CaptureInitOptions,
   CaptureRuntimeController,
   CaptureSubmissionDraft,
   CaptureSubmitResult,
+  CaptureUser,
 } from "./types"
 
 export { defaultSubmitTransport } from "./transport/default-submit-transport"
 export type {
+  CaptureContext,
   CaptureDebuggerSummary,
   CaptureInitOptions,
   CapturePriority,
@@ -19,6 +22,7 @@ export type {
   CaptureSubmitResult,
   CaptureSubmitTransport,
   CaptureType,
+  CaptureUser,
 } from "./types"
 
 const runtime = new CaptureSdkRuntime()
@@ -67,6 +71,14 @@ export function submit(
 
 export function reset(): void {
   runtime.reset()
+}
+
+export function setUser(user: CaptureUser | null): void {
+  runtime.setUser(user)
+}
+
+export function setContext(context: CaptureContext | null): void {
+  runtime.setContext(context)
 }
 
 export function isInitialized(): boolean {

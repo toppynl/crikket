@@ -30,3 +30,10 @@ export interface DeviceInfo {
   os?: string
   viewport?: string
 }
+
+export interface EndUser {
+  id?: string
+  email?: string
+  name?: string
+  [key: string]: unknown
+}

@@ -31,6 +31,8 @@ import {
 } from "./ingestion-jobs"
 import { getStorageProvider } from "./storage"
 import {
+  captureContextInputSchema,
+  endUserInputSchema,
   formatDurationMs,
   metadataInputSchema,
   requiredText,
@@ -61,6 +63,8 @@ export const createBugReportUploadSessionInputSchema = z.object({
   attachmentType: z.enum(["video", "screenshot"]),
   visibility: z.enum(visibilityValues).default("private"),
   metadata: metadataInputSchema,
+  user: endUserInputSchema,
+  context: captureContextInputSchema,
   deviceInfo: z
     .object({
       browser: z.string().optional(),
@@ -191,6 +195,8 @@ export async function createBugReportUploadSession(input: {
       debuggerKey,
       visibility: input.input.visibility,
       deviceInfo: input.input.deviceInfo,
+      endUser: input.input.user ?? null,
+      context: input.input.context ?? null,
       metadata: {
         ...normalizedMetadata,
         debuggerSummary: input.input.debuggerSummary,
@@ -353,6 +359,8 @@ export async function finalizeBugReportUpload(input: {
       submissionStatus: BUG_REPORT_SUBMISSION_STATUS_OPTIONS.processing,
       visibility: uploadSession.visibility,
       deviceInfo: uploadSession.deviceInfo,
+      endUser: uploadSession.endUser,
+      context: uploadSession.context,
       status: "open",
       metadata: uploadSession.metadata,
     })

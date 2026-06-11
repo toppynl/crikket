@@ -11,6 +11,7 @@ import type {
   DebuggerNetworkRequest,
   DebuggerTimelineEntry,
   DeviceInfo,
+  EndUser,
   SharedBugReport,
 } from "./types"
 
@@ -60,6 +61,10 @@ export function BugReportSidebar({
 }: BugReportSidebarProps) {
   const deviceInfo = data.deviceInfo as DeviceInfo | null
   const reporterName = data.reporter?.name?.trim()
+  const endUserRows = buildEndUserRows(data.endUser as EndUser | null)
+  const contextRows = buildContextRows(
+    data.context as Record<string, unknown> | null
+  )
 
   return (
     <div className="z-20 flex h-full w-full flex-col bg-background shadow-xl md:relative md:top-0 md:border-l md:shadow-none">
@@ -107,6 +112,46 @@ export function BugReportSidebar({
                 <DetailRow label="Viewport" value={deviceInfo?.viewport} />
               </div>
             </div>
+            {endUserRows.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                    End User
+                  </h3>
+                  <div className="grid gap-3 text-sm">
+                    {endUserRows.map((row) => (
+                      <DetailRow
+                        className={row.className}
+                        key={row.label}
+                        label={row.label}
+                        value={row.value}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+            {contextRows.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                    Context
+                  </h3>
+                  <div className="grid gap-3 text-sm">
+                    {contextRows.map((row) => (
+                      <DetailRow
+                        className="break-all"
+                        key={row.label}
+                        label={row.label}
+                        value={row.value}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
             <Separator />
             <div className="space-y-4">
               <h3 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
@@ -199,6 +244,74 @@ function TabButton({
       {label}
     </button>
   )
+}
+
+type DetailRowData = {
+  label: string
+  value: string | null
+  className?: string
+}
+
+function formatContextValue(value: unknown): string | null {
+  if (value === null || value === undefined) {
+    return null
+  }
+  if (typeof value === "string") {
+    return value.trim() || null
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value)
+  }
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return null
+  }
+}
+
+function buildEndUserRows(endUser: EndUser | null): DetailRowData[] {
+  if (!endUser || typeof endUser !== "object") {
+    return []
+  }
+
+  const known: DetailRowData[] = [
+    { label: "Name", value: formatContextValue(endUser.name) },
+    {
+      label: "Email",
+      value: formatContextValue(endUser.email),
+      className: "break-all",
+    },
+    {
+      label: "ID",
+      value: formatContextValue(endUser.id),
+      className: "break-all",
+    },
+  ]
+
+  const extras: DetailRowData[] = Object.entries(endUser)
+    .filter(([key]) => key !== "name" && key !== "email" && key !== "id")
+    .map(([key, value]) => ({
+      label: key,
+      value: formatContextValue(value),
+      className: "break-all",
+    }))
+
+  return [...known, ...extras].filter((row) => row.value !== null)
+}
+
+function buildContextRows(
+  context: Record<string, unknown> | null
+): DetailRowData[] {
+  if (!context || typeof context !== "object") {
+    return []
+  }
+
+  return Object.entries(context)
+    .map(([key, value]) => ({
+      label: key,
+      value: formatContextValue(value),
+    }))
+    .filter((row) => row.value !== null)
 }
 
 function DetailRow({
